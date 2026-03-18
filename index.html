@@ -46,9 +46,11 @@
     }
 
     .home-mascot {
-      font-size: 100px;
       animation: bounce 2s ease-in-out infinite;
       filter: drop-shadow(0 8px 16px rgba(0,0,0,0.2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     @keyframes bounce {
@@ -258,13 +260,13 @@
     }
 
     .mascot-area {
-      font-size: 64px;
       text-align: center;
       margin-bottom: 8px;
       min-height: 80px;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 6px;
       transition: transform 0.3s;
     }
 
@@ -372,7 +374,13 @@
       text-align: center;
     }
 
-    .result-mascot { font-size: 90px; animation: spin-bounce 1s ease; }
+    .result-mascot {
+      animation: spin-bounce 1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.18));
+    }
 
     @keyframes spin-bounce {
       0% { transform: scale(0) rotate(-180deg); opacity: 0; }
@@ -489,9 +497,9 @@
 
 <!-- HOME SCREEN -->
 <div class="screen active" id="home">
-  <div class="home-mascot">🦊</div>
+  <div class="home-mascot" id="home-mascot"></div>
   <div class="home-title">たしざん<br>アドベンチャー！</div>
-  <div class="home-subtitle">コンくんといっしょに<br>たしざんをマスターしよう！</div>
+  <div class="home-subtitle">ゴジラくんといっしょに<br>たしざんをマスターしよう！</div>
   <button class="btn-start" onclick="showScreen('levels')">はじめる ▶</button>
 </div>
 
@@ -525,7 +533,7 @@
   </div>
 
   <div class="question-count" id="question-count">1 / 10もん</div>
-  <div class="mascot-area" id="game-mascot">🦊</div>
+  <div class="mascot-area" id="game-mascot"></div>
   <div class="speech-bubble" id="speech-bubble">いくつになるかな？</div>
   <div class="equation-box" id="equation-box">? + ? = ?</div>
   <div class="choices-grid" id="choices-grid"></div>
@@ -533,7 +541,7 @@
 
 <!-- RESULT SCREEN -->
 <div class="screen" id="result">
-  <div class="result-mascot" id="result-mascot">🦊</div>
+  <div class="result-mascot" id="result-mascot"></div>
   <div class="result-title" id="result-title">すごい！</div>
   <div class="result-stars" id="result-stars">⭐⭐⭐</div>
   <div class="result-score" id="result-score">10もん せいかい！</div>
@@ -546,6 +554,102 @@
 </div>
 
 <script>
+// ==================== MASCOT SVGs ====================
+
+function godzillaSVG(w, h) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 115" width="${w}" height="${h}">
+    <!-- Tail -->
+    <path d="M33,88 C18,100 10,88 14,74 C22,70 33,80 33,88Z" fill="#2e7d4f"/>
+    <!-- Body -->
+    <ellipse cx="58" cy="84" rx="27" ry="24" fill="#43a368"/>
+    <!-- Dorsal Spines (iconic 3!) -->
+    <polygon points="38,62 34,38 46,62" fill="#1a5c38"/>
+    <polygon points="54,57 51,30 63,57" fill="#1a5c38"/>
+    <polygon points="71,60 69,35 79,60" fill="#1a5c38"/>
+    <!-- Head -->
+    <ellipse cx="64" cy="52" rx="22" ry="20" fill="#43a368"/>
+    <!-- Eyes white -->
+    <circle cx="54" cy="45" r="7.5" fill="white"/>
+    <circle cx="74" cy="45" r="7.5" fill="white"/>
+    <!-- Pupils -->
+    <circle cx="55" cy="46" r="4.5" fill="#111"/>
+    <circle cx="75" cy="46" r="4.5" fill="#111"/>
+    <!-- Eye shine -->
+    <circle cx="57" cy="44" r="1.8" fill="white"/>
+    <circle cx="77" cy="44" r="1.8" fill="white"/>
+    <!-- Nostrils -->
+    <ellipse cx="60" cy="55" rx="2" ry="1.5" fill="#1a5c38"/>
+    <ellipse cx="68" cy="55" rx="2" ry="1.5" fill="#1a5c38"/>
+    <!-- Smile -->
+    <path d="M50,62 Q64,73 78,62" stroke="#1a5c38" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <!-- Teeth (3) -->
+    <line x1="56" y1="63" x2="56" y2="68" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <line x1="64" y1="66" x2="64" y2="71" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <line x1="72" y1="63" x2="72" y2="68" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <!-- Arms (T-rex style) -->
+    <path d="M33,78 Q26,80 24,86 Q28,92 34,88" fill="#2e7d4f"/>
+    <path d="M83,78 Q90,80 92,86 Q88,92 82,88" fill="#2e7d4f"/>
+    <!-- Feet -->
+    <ellipse cx="44" cy="104" rx="14" ry="9" fill="#2e7d4f"/>
+    <ellipse cx="72" cy="104" rx="14" ry="9" fill="#2e7d4f"/>
+    <!-- Claws (3 each foot) -->
+    <line x1="33" y1="108" x2="30" y2="113" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="43" y1="111" x2="43" y2="116" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="53" y1="108" x2="56" y2="113" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="61" y1="108" x2="58" y2="113" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="71" y1="111" x2="71" y2="116" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="81" y1="108" x2="84" y2="113" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function mothraSVG(w, h) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 110" width="${w}" height="${h}">
+    <!-- Upper left wing -->
+    <path d="M65,45 Q42,20 15,30 Q10,50 25,62 Q45,70 65,58Z" fill="#E8A020"/>
+    <!-- Upper right wing -->
+    <path d="M65,45 Q88,20 115,30 Q120,50 105,62 Q85,70 65,58Z" fill="#E8A020"/>
+    <!-- Upper wing shading -->
+    <path d="M65,47 Q45,28 22,35 Q20,50 32,58 Q50,65 65,56Z" fill="#C06010" opacity="0.5"/>
+    <path d="M65,47 Q85,28 108,35 Q110,50 98,58 Q80,65 65,56Z" fill="#C06010" opacity="0.5"/>
+    <!-- Eye spots on upper wings -->
+    <circle cx="28" cy="42" r="8" fill="#1a1a1a"/>
+    <circle cx="28" cy="42" r="5" fill="#FFD700"/>
+    <circle cx="28" cy="42" r="2.5" fill="#1a1a1a"/>
+    <circle cx="102" cy="42" r="8" fill="#1a1a1a"/>
+    <circle cx="102" cy="42" r="5" fill="#FFD700"/>
+    <circle cx="102" cy="42" r="2.5" fill="#1a1a1a"/>
+    <!-- Lower left wing -->
+    <path d="M65,58 Q40,60 28,75 Q35,90 50,85 Q62,78 65,65Z" fill="#D4901A"/>
+    <!-- Lower right wing -->
+    <path d="M65,58 Q90,60 102,75 Q95,90 80,85 Q68,78 65,65Z" fill="#D4901A"/>
+    <!-- Body -->
+    <ellipse cx="65" cy="58" rx="14" ry="28" fill="#F0DCA0"/>
+    <!-- Body stripes -->
+    <ellipse cx="65" cy="48" rx="12" ry="7" fill="#D4B870" opacity="0.7"/>
+    <ellipse cx="65" cy="60" rx="12" ry="7" fill="#D4B870" opacity="0.7"/>
+    <ellipse cx="65" cy="72" rx="10" ry="5" fill="#D4B870" opacity="0.7"/>
+    <!-- Head -->
+    <circle cx="65" cy="33" r="16" fill="#F0DCA0"/>
+    <!-- Cheeks (cute!) -->
+    <circle cx="56" cy="37" r="6" fill="#FFB3C1" opacity="0.55"/>
+    <circle cx="74" cy="37" r="6" fill="#FFB3C1" opacity="0.55"/>
+    <!-- Eyes -->
+    <circle cx="59" cy="28" r="6" fill="white"/>
+    <circle cx="71" cy="28" r="6" fill="white"/>
+    <circle cx="59.5" cy="28.5" r="3.5" fill="#1a0a00"/>
+    <circle cx="71.5" cy="28.5" r="3.5" fill="#1a0a00"/>
+    <circle cx="61" cy="27" r="1.5" fill="white"/>
+    <circle cx="73" cy="27" r="1.5" fill="white"/>
+    <!-- Smile -->
+    <path d="M59,37 Q65,43 71,37" fill="none" stroke="#a06820" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Antennae -->
+    <path d="M60,19 Q52,9 44,5" fill="none" stroke="#8B6914" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M70,19 Q78,9 86,5" fill="none" stroke="#8B6914" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="44" cy="5" r="5" fill="#E8A020"/>
+    <circle cx="86" cy="5" r="5" fill="#E8A020"/>
+  </svg>`;
+}
+
 // ==================== GAME DATA ====================
 
 const LEVEL_CONFIG = [
@@ -581,7 +685,7 @@ const LEVEL_CONFIG = [
 const TOTAL_Q = 10;
 
 // Speech messages
-const CORRECT_MSGS = ["すごい！！✨", "やったね！🎉", "かんぺき！⭐", "さすが！！🎊", "だいせいかい！🌟", "やるじゃん！💪", "その調子！✨", "ブラボー！🎶"];
+const CORRECT_MSGS = ["ガオー！すごい！✨", "やったね！🎉", "かんぺき！⭐", "さすが！！🎊", "だいせいかい！🌟", "ゴジラもびっくり！💪", "その調子！✨", "ブラボー！🎶"];
 const WRONG_MSGS = ["もう一回！💪", "おしい！", "がんばれ！⚡", "つぎはいけるよ！"];
 const INTRO_MSGS = ["いくつになるかな？", "こたえはどれ？", "さあ、とくよ！", "かんがえてみよう🤔", "できるかな？✨"];
 
@@ -788,8 +892,9 @@ function renderQuestion() {
   document.getElementById('speech-bubble').textContent =
     INTRO_MSGS[Math.floor(Math.random() * INTRO_MSGS.length)];
 
-  // Mascot
-  document.getElementById('game-mascot').textContent = lv.icon + ' 🦊';
+  // Mascot (Godzilla + level icon)
+  document.getElementById('game-mascot').innerHTML =
+    `<span style="font-size:48px">${lv.icon}</span> ${godzillaSVG(68, 78)}`;
 
   // Choices
   const choices = generateChoices(q.answer, state.currentLevel);
@@ -906,9 +1011,18 @@ function showResult() {
     0: `😊 ${score}もん せいかい！　いっしょにれんしゅう！`,
   };
 
-  const mascots = { 3: '🥳', 2: '😄', 1: '😊', 0: '💪' };
+  // ゴジラ or モスラ でお祝い！
+  const resultMascotEl = document.getElementById('result-mascot');
+  resultMascotEl.style.animation = 'none';
+  resultMascotEl.offsetHeight; // reflow to restart animation
+  resultMascotEl.style.animation = '';
+  if (stars === 3) {
+    // パーフェクトはモスラ登場！
+    resultMascotEl.innerHTML = mothraSVG(118, 100);
+  } else {
+    resultMascotEl.innerHTML = godzillaSVG(100, 115);
+  }
 
-  document.getElementById('result-mascot').textContent = mascots[stars];
   document.getElementById('result-title').textContent = titles;
   document.getElementById('result-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
   document.getElementById('result-score').textContent = `${score} / ${TOTAL_Q}もん せいかい！`;
@@ -943,7 +1057,9 @@ function nextLevel() {
 function retryLevel() { startLevel(state.currentLevel); }
 
 // ==================== INIT ====================
-// Make sure level 1 is always unlocked in progress check
+// ホーム画面にゴジラSVGを表示
+document.getElementById('home-mascot').innerHTML = godzillaSVG(120, 138);
+
 window.addEventListener('resize', () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
