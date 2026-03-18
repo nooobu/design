@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>たしざんアドベンチャー！</title>
+  <title>ゴジラ足し算</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -26,7 +26,6 @@
       user-select: none;
     }
 
-    /* ===== SCREENS ===== */
     .screen {
       display: none;
       min-height: 100vh;
@@ -37,457 +36,223 @@
     }
     .screen.active { display: flex; }
 
-    /* ===== HOME SCREEN ===== */
+    /* HOME */
     #home {
-      background: linear-gradient(160deg, #FFE66D 0%, #FF6B6B 50%, #A29BFE 100%);
+      background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       justify-content: center;
-      gap: 24px;
+      gap: 20px;
       text-align: center;
     }
-
     .home-mascot {
       animation: bounce 2s ease-in-out infinite;
-      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.2));
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      filter: drop-shadow(0 8px 24px rgba(0,200,255,0.4));
+      display: flex; align-items: center; justify-content: center;
     }
-
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-20px); }
     }
-
     .home-title {
-      font-size: clamp(32px, 8vw, 56px);
+      font-size: clamp(36px, 9vw, 60px);
       font-weight: 900;
       color: white;
-      text-shadow: 0 4px 0 rgba(0,0,0,0.15);
-      letter-spacing: 2px;
+      text-shadow: 0 0 20px rgba(0,200,255,0.6), 0 4px 0 rgba(0,0,0,0.3);
+      letter-spacing: 3px;
       line-height: 1.2;
     }
-
     .home-subtitle {
-      font-size: clamp(16px, 4vw, 22px);
-      color: rgba(255,255,255,0.9);
+      font-size: clamp(15px, 3.5vw, 20px);
+      color: rgba(255,255,255,0.85);
       font-weight: 600;
     }
-
+    .form-badge-home {
+      background: rgba(0,200,255,0.2);
+      border: 2px solid rgba(0,200,255,0.5);
+      border-radius: 20px;
+      padding: 6px 18px;
+      color: #00CCFF;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
     .btn-start {
-      background: white;
-      color: #FF6B6B;
+      background: linear-gradient(135deg, #00CCFF, #0066FF);
+      color: white;
       border: none;
       border-radius: 50px;
       padding: 20px 60px;
       font-size: clamp(22px, 5vw, 30px);
       font-weight: 900;
       cursor: pointer;
-      box-shadow: 0 8px 0 rgba(0,0,0,0.15);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.3), 0 0 30px rgba(0,150,255,0.4);
       transition: transform 0.1s, box-shadow 0.1s;
-      margin-top: 10px;
+      margin-top: 6px;
     }
-    .btn-start:active {
-      transform: translateY(4px);
-      box-shadow: 0 4px 0 rgba(0,0,0,0.15);
-    }
+    .btn-start:active { transform: translateY(4px); box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
 
-    /* ===== LEVEL SELECT ===== */
-    #levels {
-      background: var(--bg);
-      gap: 16px;
-      padding-bottom: 40px;
-    }
-
-    .levels-header {
-      text-align: center;
-      padding: 10px 0 4px;
-      width: 100%;
-    }
-
-    .levels-header h2 {
-      font-size: clamp(24px, 6vw, 36px);
-      font-weight: 900;
-      color: var(--dark);
-    }
-
+    /* LEVEL SELECT */
+    #levels { background: var(--bg); gap: 16px; padding-bottom: 40px; }
+    .levels-header { text-align: center; padding: 10px 0 4px; width: 100%; }
+    .levels-header h2 { font-size: clamp(22px, 5.5vw, 34px); font-weight: 900; color: var(--dark); }
     .levels-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 16px;
-      width: 100%;
-      max-width: 600px;
+      gap: 16px; width: 100%; max-width: 600px;
     }
-
     .level-card {
-      background: white;
-      border-radius: 24px;
-      padding: 20px 10px;
-      text-align: center;
-      cursor: pointer;
+      background: white; border-radius: 24px; padding: 16px 10px;
+      text-align: center; cursor: pointer;
       box-shadow: 0 6px 0 rgba(0,0,0,0.08);
       border: 3px solid transparent;
       transition: transform 0.15s, box-shadow 0.15s;
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
-
     .level-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 6px;
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
     }
-
     .level-card.unlocked::before { background: var(--secondary); }
     .level-card.completed::before { background: var(--green); }
     .level-card.locked::before { background: #dfe6e9; }
-
     .level-card.unlocked { border-color: var(--secondary); }
     .level-card.completed { border-color: var(--green); }
     .level-card.locked { opacity: 0.5; cursor: not-allowed; }
-
-    .level-card:not(.locked):active {
-      transform: translateY(3px);
-      box-shadow: 0 3px 0 rgba(0,0,0,0.08);
-    }
-
-    .level-num {
-      font-size: 36px;
-      font-weight: 900;
-      color: var(--dark);
-    }
-
-    .level-icon { font-size: 32px; margin: 6px 0; }
-
-    .level-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: #636e72;
-      margin-top: 4px;
-    }
-
-    .level-stars {
-      margin-top: 8px;
-      font-size: 20px;
-      letter-spacing: 2px;
-      min-height: 24px;
-    }
-
+    .level-card:not(.locked):active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.08); }
+    .level-num { font-size: 32px; font-weight: 900; color: var(--dark); }
+    .level-icon { font-size: 28px; margin: 4px 0; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+    .level-name { font-size: 12px; font-weight: 700; color: #636e72; margin-top: 2px; }
+    .level-gform { font-size: 10px; font-weight: 700; color: #0088CC; margin-top: 2px; background: #E8F8FF; border-radius: 8px; padding: 2px 6px; display: inline-block; }
+    .level-stars { margin-top: 6px; font-size: 18px; letter-spacing: 2px; min-height: 22px; }
     .lock-icon { font-size: 28px; color: #b2bec3; }
-
     .total-stars-bar {
-      background: white;
-      border-radius: 20px;
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      background: white; border-radius: 20px; padding: 14px 24px;
+      display: flex; align-items: center; gap: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      width: 100%;
-      max-width: 600px;
+      width: 100%; max-width: 600px;
     }
-
     .total-stars-bar span:first-child { font-size: 28px; }
-    .total-stars-bar span:last-child {
-      font-size: clamp(18px, 4vw, 22px);
-      font-weight: 800;
-      color: var(--dark);
-    }
-
-    /* ===== GAME SCREEN ===== */
-    #game {
-      background: linear-gradient(180deg, #74b9ff 0%, #a29bfe 100%);
-      gap: 0;
-      padding: 16px;
-      justify-content: flex-start;
-    }
-
-    .game-header {
-      width: 100%;
-      max-width: 600px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .btn-back {
-      background: rgba(255,255,255,0.3);
-      border: none;
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      font-size: 22px;
-      cursor: pointer;
-      color: white;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .progress-wrap {
-      flex: 1;
-      background: rgba(255,255,255,0.3);
-      border-radius: 20px;
-      height: 16px;
-      overflow: hidden;
-    }
-
-    .progress-bar {
-      height: 100%;
-      background: var(--yellow);
-      border-radius: 20px;
-      transition: width 0.4s ease;
-    }
-
-    .level-badge {
-      background: rgba(255,255,255,0.3);
-      color: white;
-      font-weight: 800;
-      font-size: 16px;
-      padding: 8px 14px;
-      border-radius: 20px;
-      white-space: nowrap;
-    }
-
-    .question-count {
-      color: rgba(255,255,255,0.9);
-      font-size: 16px;
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-    .mascot-area {
-      text-align: center;
-      margin-bottom: 8px;
-      min-height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: transform 0.3s;
-    }
-
-    .speech-bubble {
-      background: white;
-      border-radius: 20px;
-      padding: 14px 24px;
-      font-size: clamp(18px, 4vw, 22px);
-      font-weight: 700;
-      color: var(--dark);
-      text-align: center;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      margin-bottom: 16px;
-      position: relative;
-    }
-
-    .speech-bubble::after {
-      content: '';
-      position: absolute;
-      bottom: -14px;
-      left: 50%;
-      transform: translateX(-50%);
-      border: 8px solid transparent;
-      border-top-color: white;
-    }
-
-    .equation-box {
-      background: white;
-      border-radius: 28px;
-      padding: clamp(20px, 5vw, 36px) clamp(24px, 6vw, 48px);
-      font-size: clamp(52px, 14vw, 96px);
-      font-weight: 900;
-      color: var(--dark);
-      text-align: center;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-      letter-spacing: 4px;
-      width: 100%;
-      max-width: 500px;
-      margin-bottom: 20px;
-    }
-
-    .choices-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      width: 100%;
-      max-width: 500px;
-    }
-
-    .choice-btn {
-      background: white;
-      border: 4px solid transparent;
-      border-radius: 24px;
-      padding: clamp(18px, 4vw, 26px) 12px;
-      font-size: clamp(32px, 8vw, 52px);
-      font-weight: 900;
-      color: var(--dark);
-      cursor: pointer;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.1);
-      transition: transform 0.1s, box-shadow 0.1s;
-      min-height: 90px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .choice-btn:active:not(:disabled) {
-      transform: translateY(3px);
-      box-shadow: 0 3px 0 rgba(0,0,0,0.1);
-    }
-
-    .choice-btn.correct {
-      background: #55EFC4;
-      border-color: #00b894;
-      animation: popCorrect 0.4s ease;
-    }
-
-    .choice-btn.wrong {
-      background: #FF7675;
-      border-color: #d63031;
-      animation: shake 0.4s ease;
-    }
-
-    @keyframes popCorrect {
-      0% { transform: scale(1); }
-      40% { transform: scale(1.12); }
-      100% { transform: scale(1); }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20% { transform: translateX(-8px); }
-      40% { transform: translateX(8px); }
-      60% { transform: translateX(-6px); }
-      80% { transform: translateX(6px); }
-    }
-
-    /* ===== RESULT SCREEN ===== */
-    #result {
-      background: linear-gradient(160deg, #FFE66D 0%, #FDCB6E 50%, #FF6B6B 100%);
-      justify-content: center;
-      gap: 20px;
-      text-align: center;
-    }
-
-    .result-mascot {
-      animation: spin-bounce 1s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.18));
-    }
-
-    @keyframes spin-bounce {
-      0% { transform: scale(0) rotate(-180deg); opacity: 0; }
-      60% { transform: scale(1.2) rotate(10deg); opacity: 1; }
-      100% { transform: scale(1) rotate(0deg); }
-    }
-
-    .result-title {
-      font-size: clamp(36px, 9vw, 60px);
-      font-weight: 900;
-      color: white;
-      text-shadow: 0 4px 0 rgba(0,0,0,0.15);
-    }
-
-    .result-stars {
-      font-size: clamp(48px, 12vw, 72px);
-      letter-spacing: 8px;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-    }
-
-    .result-score {
-      font-size: clamp(20px, 5vw, 28px);
-      color: rgba(255,255,255,0.95);
-      font-weight: 700;
-    }
-
-    .result-message {
-      font-size: clamp(18px, 4vw, 24px);
-      color: white;
-      font-weight: 700;
-      background: rgba(255,255,255,0.25);
-      border-radius: 16px;
-      padding: 14px 24px;
-      max-width: 400px;
-      width: 100%;
-    }
-
-    .result-btns {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      width: 100%;
-      max-width: 360px;
-    }
-
-    .btn-result {
-      border: none;
-      border-radius: 50px;
-      padding: 18px 32px;
-      font-size: clamp(20px, 5vw, 26px);
-      font-weight: 900;
-      cursor: pointer;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.15);
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-    .btn-result:active {
-      transform: translateY(3px);
-      box-shadow: 0 3px 0 rgba(0,0,0,0.15);
-    }
-
-    .btn-next { background: white; color: #FF6B6B; }
-    .btn-retry { background: rgba(255,255,255,0.35); color: white; }
-    .btn-home-r { background: rgba(255,255,255,0.2); color: white; font-size: clamp(16px, 4vw, 20px); }
-
-    /* ===== CONFETTI ===== */
-    #confetti-canvas {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 9999;
-    }
-
-    /* ===== FEEDBACK OVERLAY ===== */
-    .feedback-overlay {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0);
-      font-size: 80px;
-      z-index: 1000;
-      transition: transform 0.2s, opacity 0.3s;
-      opacity: 0;
-      pointer-events: none;
-    }
-    .feedback-overlay.show {
-      transform: translate(-50%, -50%) scale(1.2);
-      opacity: 1;
-    }
-    .feedback-overlay.hide {
-      transform: translate(-50%, -50%) scale(2);
-      opacity: 0;
-    }
-
-    /* ===== ALL DONE BANNER ===== */
+    .total-stars-bar span:last-child { font-size: clamp(18px,4vw,22px); font-weight: 800; color: var(--dark); }
     .all-done-badge {
       background: linear-gradient(135deg, #FFE66D, #FDCB6E);
-      border-radius: 16px;
-      padding: 10px 20px;
-      font-size: clamp(14px, 3vw, 18px);
-      font-weight: 800;
-      color: var(--dark);
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-      max-width: 600px;
-      width: 100%;
+      border-radius: 16px; padding: 10px 20px;
+      font-size: clamp(14px,3vw,18px); font-weight: 800; color: var(--dark);
+      text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      max-width: 600px; width: 100%;
     }
+
+    /* GAME */
+    #game {
+      background: linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      gap: 0; padding: 16px; justify-content: flex-start;
+    }
+    .game-header {
+      width: 100%; max-width: 600px;
+      display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+    }
+    .btn-back {
+      background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+      width: 48px; height: 48px; font-size: 22px; cursor: pointer;
+      color: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    }
+    .progress-wrap { flex: 1; background: rgba(255,255,255,0.2); border-radius: 20px; height: 16px; overflow: hidden; }
+    .progress-bar { height: 100%; background: var(--yellow); border-radius: 20px; transition: width 0.4s ease; }
+    .level-badge {
+      background: rgba(0,200,255,0.2); color: #00CCFF;
+      font-weight: 800; font-size: 14px; padding: 8px 14px; border-radius: 20px; white-space: nowrap;
+      border: 1px solid rgba(0,200,255,0.4);
+    }
+    .question-count { color: rgba(255,255,255,0.85); font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 6px; }
+    .mascot-area {
+      text-align: center; margin-bottom: 6px; min-height: 90px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .form-label {
+      color: #00CCFF; font-size: 12px; font-weight: 700;
+      background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.3);
+      border-radius: 10px; padding: 2px 8px; text-align: center; margin-bottom: 4px;
+    }
+    .speech-bubble {
+      background: white; border-radius: 20px; padding: 12px 20px;
+      font-size: clamp(17px,4vw,21px); font-weight: 700; color: var(--dark);
+      text-align: center; max-width: 400px; width: 100%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2); margin-bottom: 14px; position: relative;
+    }
+    .speech-bubble::after {
+      content: ''; position: absolute; bottom: -14px; left: 50%;
+      transform: translateX(-50%); border: 8px solid transparent; border-top-color: white;
+    }
+    .equation-box {
+      background: white; border-radius: 28px;
+      padding: clamp(18px,5vw,32px) clamp(22px,6vw,44px);
+      font-size: clamp(50px,13vw,90px); font-weight: 900; color: var(--dark);
+      text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      letter-spacing: 4px; width: 100%; max-width: 500px; margin-bottom: 18px;
+    }
+    .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 500px; }
+    .choice-btn {
+      background: white; border: 4px solid transparent; border-radius: 24px;
+      padding: clamp(16px,4vw,24px) 12px; font-size: clamp(30px,8vw,50px);
+      font-weight: 900; color: var(--dark); cursor: pointer;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+      transition: transform 0.1s, box-shadow 0.1s;
+      min-height: 88px; display: flex; align-items: center; justify-content: center;
+    }
+    .choice-btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.1); }
+    .choice-btn.correct { background: #55EFC4; border-color: #00b894; animation: popCorrect 0.4s ease; }
+    .choice-btn.wrong { background: #FF7675; border-color: #d63031; animation: shake 0.4s ease; }
+    @keyframes popCorrect { 0%{transform:scale(1)} 40%{transform:scale(1.12)} 100%{transform:scale(1)} }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+      40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
+    }
+
+    /* RESULT */
+    #result {
+      background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      justify-content: center; gap: 18px; text-align: center;
+    }
+    .result-mascot {
+      animation: spin-bounce 1s ease;
+      display: flex; align-items: center; justify-content: center;
+      filter: drop-shadow(0 6px 20px rgba(0,200,255,0.4));
+    }
+    @keyframes spin-bounce {
+      0%{transform:scale(0) rotate(-180deg);opacity:0}
+      60%{transform:scale(1.2) rotate(10deg);opacity:1}
+      100%{transform:scale(1) rotate(0deg)}
+    }
+    .result-title { font-size: clamp(34px,9vw,58px); font-weight: 900; color: white; text-shadow: 0 0 20px rgba(0,200,255,0.5), 0 4px 0 rgba(0,0,0,0.2); }
+    .result-stars { font-size: clamp(46px,11vw,68px); letter-spacing: 8px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }
+    .result-score { font-size: clamp(20px,5vw,28px); color: rgba(255,255,255,0.95); font-weight: 700; }
+    .result-form-name { font-size: clamp(14px,3vw,18px); color: #00CCFF; font-weight: 700; background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.4); border-radius: 12px; padding: 6px 16px; display: inline-block; }
+    .result-message {
+      font-size: clamp(16px,4vw,22px); color: white; font-weight: 700;
+      background: rgba(255,255,255,0.15); border-radius: 16px;
+      padding: 12px 20px; max-width: 400px; width: 100%;
+    }
+    .result-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 360px; }
+    .btn-result {
+      border: none; border-radius: 50px; padding: 18px 32px;
+      font-size: clamp(20px,5vw,26px); font-weight: 900; cursor: pointer;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.2); transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .btn-result:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
+    .btn-next { background: linear-gradient(135deg,#00CCFF,#0066FF); color: white; }
+    .btn-retry { background: rgba(255,255,255,0.2); color: white; }
+    .btn-home-r { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); font-size: clamp(16px,4vw,20px); }
+
+    /* CONFETTI */
+    #confetti-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999; }
+
+    /* FEEDBACK */
+    .feedback-overlay {
+      position: fixed; top:50%; left:50%;
+      transform: translate(-50%,-50%) scale(0);
+      font-size: 80px; z-index: 1000;
+      transition: transform 0.2s, opacity 0.3s;
+      opacity: 0; pointer-events: none;
+    }
+    .feedback-overlay.show { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+    .feedback-overlay.hide { transform: translate(-50%,-50%) scale(2); opacity: 0; }
   </style>
 </head>
 <body>
@@ -495,53 +260,48 @@
 <canvas id="confetti-canvas"></canvas>
 <div class="feedback-overlay" id="feedback"></div>
 
-<!-- HOME SCREEN -->
+<!-- HOME -->
 <div class="screen active" id="home">
   <div class="home-mascot" id="home-mascot"></div>
-  <div class="home-title">たしざん<br>アドベンチャー！</div>
-  <div class="home-subtitle">ゴジラくんといっしょに<br>たしざんをマスターしよう！</div>
+  <div id="home-form-badge" class="form-badge-home">ゴジラ 第一形態</div>
+  <div class="home-title">ゴジラ<br>足し算！</div>
+  <div class="home-subtitle">ゴジラ＆モスラといっしょに<br>足し算をマスターしよう！</div>
   <button class="btn-start" onclick="showScreen('levels')">はじめる ▶</button>
 </div>
 
-<!-- LEVEL SELECT SCREEN -->
+<!-- LEVEL SELECT -->
 <div class="screen" id="levels">
-  <div class="levels-header">
-    <h2>🗺️ レベルをえらんでね！</h2>
-  </div>
-
+  <div class="levels-header"><h2>🗺️ レベルをえらんでね！</h2></div>
   <div class="total-stars-bar">
     <span>⭐</span>
     <span id="total-stars-display">0 / 30 ほし</span>
     <span style="margin-left:auto;font-size:22px;" id="total-stars-emoji"></span>
   </div>
-
   <div class="levels-grid" id="levels-grid"></div>
-
   <div class="all-done-badge" id="all-done-badge" style="display:none">
     🎉 ぜんぶクリア！キミはたしざんマスターだ！🎉
   </div>
 </div>
 
-<!-- GAME SCREEN -->
+<!-- GAME -->
 <div class="screen" id="game">
   <div class="game-header">
     <button class="btn-back" onclick="confirmBack()">←</button>
-    <div class="progress-wrap">
-      <div class="progress-bar" id="progress-bar"></div>
-    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
     <div class="level-badge" id="level-badge">Lv.1</div>
   </div>
-
   <div class="question-count" id="question-count">1 / 10もん</div>
+  <div class="form-label" id="form-label">ゴジラ 第一形態</div>
   <div class="mascot-area" id="game-mascot"></div>
   <div class="speech-bubble" id="speech-bubble">いくつになるかな？</div>
   <div class="equation-box" id="equation-box">? + ? = ?</div>
   <div class="choices-grid" id="choices-grid"></div>
 </div>
 
-<!-- RESULT SCREEN -->
+<!-- RESULT -->
 <div class="screen" id="result">
   <div class="result-mascot" id="result-mascot"></div>
+  <div class="result-form-name" id="result-form-name">ゴジラ 第一形態</div>
   <div class="result-title" id="result-title">すごい！</div>
   <div class="result-stars" id="result-stars">⭐⭐⭐</div>
   <div class="result-score" id="result-score">10もん せいかい！</div>
@@ -554,145 +314,342 @@
 </div>
 
 <script>
-// ==================== MASCOT SVGs ====================
+// ============================================================
+// GODZILLA SVGs — 5 Forms
+// ============================================================
+function godzillaSVG(w, h, form) {
+  form = form || 1;
 
-function godzillaSVG(w, h) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 115" width="${w}" height="${h}">
-    <!-- Tail -->
-    <path d="M33,88 C18,100 10,88 14,74 C22,70 33,80 33,88Z" fill="#2e7d4f"/>
-    <!-- Body -->
-    <ellipse cx="58" cy="84" rx="27" ry="24" fill="#43a368"/>
-    <!-- Dorsal Spines (iconic 3!) -->
-    <polygon points="38,62 34,38 46,62" fill="#1a5c38"/>
-    <polygon points="54,57 51,30 63,57" fill="#1a5c38"/>
-    <polygon points="71,60 69,35 79,60" fill="#1a5c38"/>
-    <!-- Head -->
-    <ellipse cx="64" cy="52" rx="22" ry="20" fill="#43a368"/>
-    <!-- Eyes white -->
-    <circle cx="54" cy="45" r="7.5" fill="white"/>
-    <circle cx="74" cy="45" r="7.5" fill="white"/>
-    <!-- Pupils -->
-    <circle cx="55" cy="46" r="4.5" fill="#111"/>
-    <circle cx="75" cy="46" r="4.5" fill="#111"/>
-    <!-- Eye shine -->
-    <circle cx="57" cy="44" r="1.8" fill="white"/>
-    <circle cx="77" cy="44" r="1.8" fill="white"/>
-    <!-- Nostrils -->
-    <ellipse cx="60" cy="55" rx="2" ry="1.5" fill="#1a5c38"/>
-    <ellipse cx="68" cy="55" rx="2" ry="1.5" fill="#1a5c38"/>
-    <!-- Smile -->
-    <path d="M50,62 Q64,73 78,62" stroke="#1a5c38" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <!-- Teeth (3) -->
-    <line x1="56" y1="63" x2="56" y2="68" stroke="white" stroke-width="3" stroke-linecap="round"/>
-    <line x1="64" y1="66" x2="64" y2="71" stroke="white" stroke-width="3" stroke-linecap="round"/>
-    <line x1="72" y1="63" x2="72" y2="68" stroke="white" stroke-width="3" stroke-linecap="round"/>
-    <!-- Arms (T-rex style) -->
-    <path d="M33,78 Q26,80 24,86 Q28,92 34,88" fill="#2e7d4f"/>
-    <path d="M83,78 Q90,80 92,86 Q88,92 82,88" fill="#2e7d4f"/>
-    <!-- Feet -->
-    <ellipse cx="44" cy="104" rx="14" ry="9" fill="#2e7d4f"/>
-    <ellipse cx="72" cy="104" rx="14" ry="9" fill="#2e7d4f"/>
-    <!-- Claws (3 each foot) -->
-    <line x1="33" y1="108" x2="30" y2="113" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="43" y1="111" x2="43" y2="116" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="53" y1="108" x2="56" y2="113" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="61" y1="108" x2="58" y2="113" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="71" y1="111" x2="71" y2="116" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="81" y1="108" x2="84" y2="113" stroke="#1a5c38" stroke-width="2.5" stroke-linecap="round"/>
-  </svg>`;
+  // Form 5 = MechaGodzilla
+  if (form === 5) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="${w}" height="${h}">
+      <defs><filter id="mglow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <!-- Tail mechanical -->
+      <path d="M32,90 C16,102 8,90 13,76 C21,72 32,82 32,90Z" fill="#777"/>
+      <rect x="13" y="76" width="9" height="5" rx="1" fill="#999"/>
+      <rect x="17" y="81" width="7" height="5" rx="1" fill="#999"/>
+      <!-- Body panels -->
+      <rect x="30" y="65" width="52" height="38" rx="9" fill="#AAAAAA"/>
+      <rect x="34" y="69" width="20" height="13" rx="3" fill="#888"/>
+      <rect x="58" y="69" width="20" height="13" rx="3" fill="#888"/>
+      <rect x="34" y="86" width="44" height="13" rx="3" fill="#888"/>
+      <!-- Rivet dots -->
+      <circle cx="36" cy="71" r="1.5" fill="#666"/>
+      <circle cx="52" cy="71" r="1.5" fill="#666"/>
+      <circle cx="60" cy="71" r="1.5" fill="#666"/>
+      <circle cx="76" cy="71" r="1.5" fill="#666"/>
+      <!-- Dorsal rockets -->
+      <rect x="35" y="50" width="9" height="23" rx="4.5" fill="#888"/>
+      <rect x="50" y="44" width="9" height="28" rx="4.5" fill="#888"/>
+      <rect x="65" y="48" width="9" height="25" rx="4.5" fill="#888"/>
+      <!-- Rocket glow tips -->
+      <ellipse cx="39.5" cy="50" rx="4.5" ry="3" fill="#00FFFF" filter="url(#mglow)" opacity="0.9"/>
+      <ellipse cx="54.5" cy="44" rx="4.5" ry="3" fill="#00FFFF" filter="url(#mglow)" opacity="0.9"/>
+      <ellipse cx="69.5" cy="48" rx="4.5" ry="3" fill="#00FFFF" filter="url(#mglow)" opacity="0.9"/>
+      <!-- Head rectangular -->
+      <rect x="42" y="36" width="38" height="32" rx="7" fill="#BBBBBB"/>
+      <rect x="46" y="40" width="30" height="6" rx="2" fill="#999"/>
+      <!-- Laser eyes -->
+      <rect x="48" y="50" width="9" height="9" rx="2" fill="#CC0000"/>
+      <rect x="65" y="50" width="9" height="9" rx="2" fill="#CC0000"/>
+      <circle cx="52.5" cy="54.5" r="3.5" fill="#FF4444" filter="url(#mglow)"/>
+      <circle cx="69.5" cy="54.5" r="3.5" fill="#FF4444" filter="url(#mglow)"/>
+      <!-- Laser beam from right eye -->
+      <line x1="80" y1="54" x2="100" y2="48" stroke="#FF0000" stroke-width="2.5" opacity="0.7" filter="url(#mglow)"/>
+      <!-- Mouth grill -->
+      <rect x="48" y="62" width="26" height="5" rx="2" fill="#777"/>
+      <line x1="54" y1="62" x2="54" y2="67" stroke="#999" stroke-width="1.2"/>
+      <line x1="60" y1="62" x2="60" y2="67" stroke="#999" stroke-width="1.2"/>
+      <line x1="66" y1="62" x2="66" y2="67" stroke="#999" stroke-width="1.2"/>
+      <!-- Arms mechanical -->
+      <rect x="22" y="72" width="10" height="20" rx="5" fill="#999"/>
+      <rect x="80" y="72" width="10" height="20" rx="5" fill="#999"/>
+      <!-- Feet -->
+      <rect x="32" y="100" width="22" height="13" rx="5" fill="#999"/>
+      <rect x="58" y="100" width="22" height="13" rx="5" fill="#999"/>
+      <!-- Claws -->
+      <line x1="35" y1="113" x2="32" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="43" y1="113" x2="43" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="51" y1="113" x2="54" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="61" y1="113" x2="58" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="70" y1="113" x2="70" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="78" y1="113" x2="81" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  // Forms 1-4: biological variants
+  var C = [null,
+    { body:'#43a368', dark:'#2e7d4f', spine:'#1a5c38', pupil:'#111', eyebrow:false, extraSpines:false, glowColor:null, fire:false },
+    { body:'#1e6b35', dark:'#0a3018', spine:'#061408', pupil:'#111', eyebrow:true,  extraSpines:true,  glowColor:null, fire:false },
+    { body:'#1a3a9c', dark:'#0d1f6c', spine:'#00CCFF', pupil:'#00CCFF', eyebrow:false, extraSpines:false, glowColor:'#00CCFF', fire:false },
+    { body:'#CC3300', dark:'#881100', spine:'#FF6600', pupil:'#FFD700', eyebrow:false, extraSpines:false, glowColor:null, fire:true },
+  ][form];
+
+  var spineTop = C.extraSpines ? 28 : 22;
+  var gf = C.glowColor ? ('filter="url(#bglow)"') : '';
+  var glowDef = C.glowColor ? ('<defs><filter id="bglow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>') : '';
+
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="' + w + '" height="' + h + '">'
+    + glowDef
+    // fire aura
+    + (C.fire ? '<ellipse cx="58" cy="82" rx="32" ry="29" fill="#FF4400" opacity="0.2"/><ellipse cx="58" cy="78" rx="26" ry="24" fill="#FF8800" opacity="0.18"/>' : '')
+    // tail
+    + '<path d="M33,90 C18,102 10,90 14,76 C22,72 33,82 33,90Z" fill="' + C.dark + '"/>'
+    // body
+    + '<ellipse cx="58" cy="86" rx="27" ry="24" fill="' + C.body + '"/>'
+    // extra spines (form 2)
+    + (C.extraSpines ? '<polygon points="26,67 22,' + (67-spineTop-4) + ' 36,67" fill="' + C.spine + '"/><polygon points="82,64 80,' + (64-spineTop-2) + ' 90,64" fill="' + C.spine + '"/>' : '')
+    // main 3 spines
+    + '<polygon points="38,64 34,' + (64-spineTop) + ' 46,64" fill="' + C.spine + '" ' + gf + '/>'
+    + '<polygon points="54,59 51,' + (59-spineTop-2) + ' 63,59" fill="' + C.spine + '" ' + gf + '/>'
+    + '<polygon points="71,62 69,' + (62-spineTop) + ' 79,62" fill="' + C.spine + '" ' + gf + '/>'
+    // fire flame tips
+    + (C.fire ? '<polygon points="38,' + (64-spineTop) + ' 33,' + (64-spineTop-10) + ' 43,' + (64-spineTop-10) + '" fill="#FFD700" opacity="0.9"/><polygon points="54,' + (59-spineTop-2) + ' 49,' + (59-spineTop-12) + ' 59,' + (59-spineTop-12) + '" fill="#FFD700" opacity="0.9"/><polygon points="71,' + (62-spineTop) + ' 66,' + (62-spineTop-10) + ' 76,' + (62-spineTop-10) + '" fill="#FFD700" opacity="0.9"/>' : '')
+    // blue glow halos
+    + (C.glowColor ? '<circle cx="40" cy="' + (64-spineTop) + '" r="5" fill="' + C.glowColor + '" opacity="0.4"/><circle cx="57" cy="' + (59-spineTop-2) + '" r="5" fill="' + C.glowColor + '" opacity="0.4"/><circle cx="74" cy="' + (62-spineTop) + '" r="5" fill="' + C.glowColor + '" opacity="0.4"/>' : '')
+    // head
+    + '<ellipse cx="64" cy="54" rx="22" ry="20" fill="' + C.body + '"/>'
+    // eyebrows for form 2
+    + (C.eyebrow ? '<line x1="47" y1="40" x2="60" y2="43" stroke="' + C.dark + '" stroke-width="3.5" stroke-linecap="round"/><line x1="69" y1="43" x2="82" y2="40" stroke="' + C.dark + '" stroke-width="3.5" stroke-linecap="round"/>' : '')
+    // eye whites
+    + '<circle cx="54" cy="47" r="7.5" fill="white"/><circle cx="74" cy="47" r="7.5" fill="white"/>'
+    // pupils
+    + '<circle cx="55" cy="48" r="4.5" fill="' + C.pupil + '"/><circle cx="75" cy="48" r="4.5" fill="' + C.pupil + '"/>'
+    // eye shine (not for glowing eyes)
+    + (C.glowColor ? '<circle cx="54" cy="47" r="9" fill="' + C.glowColor + '" opacity="0.25"/><circle cx="74" cy="47" r="9" fill="' + C.glowColor + '" opacity="0.25"/>' : '<circle cx="57" cy="45" r="1.8" fill="white"/><circle cx="77" cy="45" r="1.8" fill="white"/>')
+    // nostrils
+    + '<ellipse cx="60" cy="57" rx="2" ry="1.5" fill="' + C.dark + '"/><ellipse cx="68" cy="57" rx="2" ry="1.5" fill="' + C.dark + '"/>'
+    // smile
+    + '<path d="M50,64 Q64,75 78,64" stroke="' + C.dark + '" stroke-width="3" fill="none" stroke-linecap="round"/>'
+    // teeth
+    + '<line x1="56" y1="65" x2="56" y2="70" stroke="white" stroke-width="3" stroke-linecap="round"/>'
+    + '<line x1="64" y1="68" x2="64" y2="73" stroke="white" stroke-width="3" stroke-linecap="round"/>'
+    + '<line x1="72" y1="65" x2="72" y2="70" stroke="white" stroke-width="3" stroke-linecap="round"/>'
+    // arms
+    + '<path d="M33,80 Q26,82 24,88 Q28,94 34,90" fill="' + C.dark + '"/>'
+    + '<path d="M83,80 Q90,82 92,88 Q88,94 82,90" fill="' + C.dark + '"/>'
+    // feet
+    + '<ellipse cx="44" cy="107" rx="14" ry="9" fill="' + C.dark + '"/>'
+    + '<ellipse cx="72" cy="107" rx="14" ry="9" fill="' + C.dark + '"/>'
+    // claws
+    + '<line x1="33" y1="111" x2="30" y2="116" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
+    + '<line x1="43" y1="114" x2="43" y2="119" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
+    + '<line x1="53" y1="111" x2="56" y2="116" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
+    + '<line x1="61" y1="111" x2="58" y2="116" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
+    + '<line x1="71" y1="114" x2="71" y2="119" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
+    + '<line x1="81" y1="111" x2="84" y2="116" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
+    + '</svg>';
 }
 
-function mothraSVG(w, h) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 110" width="${w}" height="${h}">
-    <!-- Upper left wing -->
-    <path d="M65,45 Q42,20 15,30 Q10,50 25,62 Q45,70 65,58Z" fill="#E8A020"/>
-    <!-- Upper right wing -->
-    <path d="M65,45 Q88,20 115,30 Q120,50 105,62 Q85,70 65,58Z" fill="#E8A020"/>
-    <!-- Upper wing shading -->
-    <path d="M65,47 Q45,28 22,35 Q20,50 32,58 Q50,65 65,56Z" fill="#C06010" opacity="0.5"/>
-    <path d="M65,47 Q85,28 108,35 Q110,50 98,58 Q80,65 65,56Z" fill="#C06010" opacity="0.5"/>
-    <!-- Eye spots on upper wings -->
-    <circle cx="28" cy="42" r="8" fill="#1a1a1a"/>
-    <circle cx="28" cy="42" r="5" fill="#FFD700"/>
-    <circle cx="28" cy="42" r="2.5" fill="#1a1a1a"/>
-    <circle cx="102" cy="42" r="8" fill="#1a1a1a"/>
-    <circle cx="102" cy="42" r="5" fill="#FFD700"/>
-    <circle cx="102" cy="42" r="2.5" fill="#1a1a1a"/>
-    <!-- Lower left wing -->
-    <path d="M65,58 Q40,60 28,75 Q35,90 50,85 Q62,78 65,65Z" fill="#D4901A"/>
-    <!-- Lower right wing -->
-    <path d="M65,58 Q90,60 102,75 Q95,90 80,85 Q68,78 65,65Z" fill="#D4901A"/>
-    <!-- Body -->
-    <ellipse cx="65" cy="58" rx="14" ry="28" fill="#F0DCA0"/>
-    <!-- Body stripes -->
-    <ellipse cx="65" cy="48" rx="12" ry="7" fill="#D4B870" opacity="0.7"/>
-    <ellipse cx="65" cy="60" rx="12" ry="7" fill="#D4B870" opacity="0.7"/>
-    <ellipse cx="65" cy="72" rx="10" ry="5" fill="#D4B870" opacity="0.7"/>
-    <!-- Head -->
-    <circle cx="65" cy="33" r="16" fill="#F0DCA0"/>
-    <!-- Cheeks (cute!) -->
-    <circle cx="56" cy="37" r="6" fill="#FFB3C1" opacity="0.55"/>
-    <circle cx="74" cy="37" r="6" fill="#FFB3C1" opacity="0.55"/>
-    <!-- Eyes -->
-    <circle cx="59" cy="28" r="6" fill="white"/>
-    <circle cx="71" cy="28" r="6" fill="white"/>
-    <circle cx="59.5" cy="28.5" r="3.5" fill="#1a0a00"/>
-    <circle cx="71.5" cy="28.5" r="3.5" fill="#1a0a00"/>
-    <circle cx="61" cy="27" r="1.5" fill="white"/>
-    <circle cx="73" cy="27" r="1.5" fill="white"/>
-    <!-- Smile -->
-    <path d="M59,37 Q65,43 71,37" fill="none" stroke="#a06820" stroke-width="2.5" stroke-linecap="round"/>
-    <!-- Antennae -->
-    <path d="M60,19 Q52,9 44,5" fill="none" stroke="#8B6914" stroke-width="3.5" stroke-linecap="round"/>
-    <path d="M70,19 Q78,9 86,5" fill="none" stroke="#8B6914" stroke-width="3.5" stroke-linecap="round"/>
-    <circle cx="44" cy="5" r="5" fill="#E8A020"/>
-    <circle cx="86" cy="5" r="5" fill="#E8A020"/>
-  </svg>`;
+// ============================================================
+// MOTHRA SVGs — 4 Forms
+// ============================================================
+function mothraSVG(w, h, form) {
+  form = form || 1;
+  var C = [null,
+    { wu:'#E8A020', wd:'#D4901A', body:'#F0DCA0', ep1:'#1a1a1a', ep2:'#FFD700', cheek:'#FFB3C1', extra:'' },
+    { wu:'#0088CC', wd:'#005588', body:'#AAD8F0', ep1:'#003366', ep2:'#00FFFF', cheek:'#88CCFF', extra:'aqua' },
+    { wu:'#FF3366', wd:'#AA0044', body:'#FFEEAA', ep1:'#1a1a1a', ep2:'#FFD700', cheek:'#FFB3C1', extra:'rainbow' },
+    { wu:'#C8F0FF', wd:'#88CCEE', body:'#FFFFFF', ep1:'#336699', ep2:'#AADDFF', cheek:'#CCF0FF', extra:'ice' },
+  ][form];
+
+  var wuL = C.extra === 'rainbow' ? 'url(#rwl)' : C.wu;
+  var wuR = C.extra === 'rainbow' ? 'url(#rwr)' : C.wu;
+
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 115" width="' + w + '" height="' + h + '">'
+    + (C.extra === 'rainbow' ? '<defs><linearGradient id="rwl" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FF3366"/><stop offset="50%" style="stop-color:#FFEE00"/><stop offset="100%" style="stop-color:#3366FF"/></linearGradient><linearGradient id="rwr" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#3366FF"/><stop offset="50%" style="stop-color:#FFEE00"/><stop offset="100%" style="stop-color:#FF3366"/></linearGradient></defs>' : '')
+    // upper wings
+    + '<path d="M65,45 Q42,20 15,30 Q10,50 25,62 Q45,70 65,58Z" fill="' + wuL + '"/>'
+    + '<path d="M65,45 Q88,20 115,30 Q120,50 105,62 Q85,70 65,58Z" fill="' + wuR + '"/>'
+    // wing shading
+    + '<path d="M65,47 Q45,28 22,35 Q20,50 32,58 Q50,65 65,56Z" fill="' + C.wd + '" opacity="0.5"/>'
+    + '<path d="M65,47 Q85,28 108,35 Q110,50 98,58 Q80,65 65,56Z" fill="' + C.wd + '" opacity="0.5"/>'
+    // eye spots
+    + '<circle cx="28" cy="42" r="8" fill="' + C.ep1 + '"/><circle cx="28" cy="42" r="5" fill="' + C.ep2 + '"/><circle cx="28" cy="42" r="2.5" fill="' + C.ep1 + '"/>'
+    + '<circle cx="102" cy="42" r="8" fill="' + C.ep1 + '"/><circle cx="102" cy="42" r="5" fill="' + C.ep2 + '"/><circle cx="102" cy="42" r="2.5" fill="' + C.ep1 + '"/>'
+    // lower wings
+    + '<path d="M65,58 Q40,60 28,75 Q35,90 50,85 Q62,78 65,65Z" fill="' + C.wd + '"/>'
+    + '<path d="M65,58 Q90,60 102,75 Q95,90 80,85 Q68,78 65,65Z" fill="' + C.wd + '"/>'
+    // ice crystals
+    + (C.extra === 'ice' ? '<polygon points="18,38 14,46 22,46" fill="#E8F8FF" opacity="0.9"/><polygon points="112,38 108,46 116,46" fill="#E8F8FF" opacity="0.9"/><polygon points="30,70 26,78 34,78" fill="#E8F8FF" opacity="0.9"/><polygon points="100,70 96,78 104,78" fill="#E8F8FF" opacity="0.9"/><polygon points="14,55 11,61 17,61" fill="#FFFFFF" opacity="0.7"/>' : '')
+    // aqua bubbles
+    + (C.extra === 'aqua' ? '<circle cx="18" cy="42" r="4" fill="none" stroke="#00CCFF" stroke-width="1.5" opacity="0.8"/><circle cx="112" cy="42" r="4" fill="none" stroke="#00CCFF" stroke-width="1.5" opacity="0.8"/><circle cx="22" cy="56" r="3" fill="none" stroke="#00CCFF" stroke-width="1.5" opacity="0.7"/><circle cx="108" cy="56" r="3" fill="none" stroke="#00CCFF" stroke-width="1.5" opacity="0.7"/>' : '')
+    // body
+    + '<ellipse cx="65" cy="60" rx="14" ry="28" fill="' + C.body + '"/>'
+    + '<ellipse cx="65" cy="50" rx="12" ry="7" fill="' + C.wd + '" opacity="0.5"/>'
+    + '<ellipse cx="65" cy="62" rx="12" ry="7" fill="' + C.wd + '" opacity="0.5"/>'
+    + '<ellipse cx="65" cy="74" rx="10" ry="5" fill="' + C.wd + '" opacity="0.5"/>'
+    // head
+    + '<circle cx="65" cy="35" r="16" fill="' + C.body + '"/>'
+    // cheeks
+    + '<circle cx="56" cy="39" r="6" fill="' + C.cheek + '" opacity="0.55"/>'
+    + '<circle cx="74" cy="39" r="6" fill="' + C.cheek + '" opacity="0.55"/>'
+    // eyes
+    + '<circle cx="59" cy="30" r="6" fill="white"/><circle cx="71" cy="30" r="6" fill="white"/>'
+    + '<circle cx="59.5" cy="30.5" r="3.5" fill="#1a0a00"/><circle cx="71.5" cy="30.5" r="3.5" fill="#1a0a00"/>'
+    + '<circle cx="61" cy="29" r="1.5" fill="white"/><circle cx="73" cy="29" r="1.5" fill="white"/>'
+    // smile
+    + '<path d="M59,39 Q65,45 71,39" fill="none" stroke="#a06820" stroke-width="2.5" stroke-linecap="round"/>'
+    // antennae
+    + '<path d="M60,21 Q52,11 44,7" fill="none" stroke="#8B6914" stroke-width="3.5" stroke-linecap="round"/>'
+    + '<path d="M70,21 Q78,11 86,7" fill="none" stroke="#8B6914" stroke-width="3.5" stroke-linecap="round"/>'
+    + '<circle cx="44" cy="7" r="5" fill="' + C.wu + '"/>'
+    + '<circle cx="86" cy="7" r="5" fill="' + C.wu + '"/>'
+    + '</svg>';
 }
 
-// ==================== GAME DATA ====================
+// ============================================================
+// MINI MONSTER SVGs — for level cards
+// ============================================================
+function hedoraMini() {
+  return '<svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg">'
+    + '<path d="M10,40 Q5,25 12,15 Q20,8 30,10 Q42,8 50,18 Q57,28 52,42 Q44,55 30,55 Q15,55 10,40Z" fill="#5A7A2A"/>'
+    + '<path d="M20,55 Q17,63 21,66" fill="none" stroke="#8BC34A" stroke-width="3" stroke-linecap="round"/>'
+    + '<path d="M38,55 Q41,63 37,66" fill="none" stroke="#8BC34A" stroke-width="3" stroke-linecap="round"/>'
+    + '<circle cx="24" cy="26" r="8" fill="#222"/><circle cx="38" cy="22" r="6" fill="#222"/>'
+    + '<circle cx="24" cy="26" r="4.5" fill="#AAFF00"/><circle cx="38" cy="22" r="3" fill="#AAFF00"/>'
+    + '<circle cx="24" cy="24" r="2" fill="#003300"/><circle cx="38" cy="20" r="1.5" fill="#003300"/>'
+    + '<circle cx="15" cy="36" r="3" fill="#8BC34A" opacity="0.6"/>'
+    + '<circle cx="45" cy="30" r="4" fill="#8BC34A" opacity="0.6"/>'
+    + '<circle cx="30" cy="18" r="2.5" fill="#AAFF00" opacity="0.7"/>'
+    + '</svg>';
+}
 
-const LEVEL_CONFIG = [
-  { id: 1, name: "いち＋いち",   icon: "🌱", color: "#81ECEC", desc: "1けた + 1けた（こたえ10まで）",
-    gen: () => { const a = rnd(1,5); const b = rnd(1, 9-a); return [a, b]; } },
-  { id: 2, name: "もっとたす",   icon: "🌼", color: "#FFEAA7", desc: "1けた + 1けた",
-    gen: () => { const a = rnd(1,9); const b = rnd(1,9); return [a, b]; } },
-  { id: 3, name: "10のなかま",   icon: "🌟", color: "#74B9FF", desc: "10 + 1けた",
-    gen: () => [10, rnd(1,9)] },
-  { id: 4, name: "にじゅうたす", icon: "🌈", color: "#A29BFE", desc: "2けた（10,20..）+ 1けた",
-    gen: () => [rnd(1,5)*10, rnd(1,9)] },
-  { id: 5, name: "くりあがりなし", icon: "🦋", color: "#55EFC4", desc: "2けた + 1けた（くりあがりなし）",
-    gen: () => { const a = rnd(10,59); const maxB = 9 - (a % 10); return [a, maxB > 0 ? rnd(1, maxB) : 1]; } },
-  { id: 6, name: "くりあがり！",  icon: "🚀", color: "#FDCB6E", desc: "2けた + 1けた（くりあがりあり）",
-    gen: () => { const tens = rnd(1,8)*10; const ones = rnd(1,9); const b = 10 - ones + rnd(1,5); return [tens + ones, b]; } },
-  { id: 7, name: "にけたプラス",  icon: "⚡", color: "#FF7675", desc: "2けた + 2けた（くりあがりなし）",
-    gen: () => {
-      const a = rnd(11,49);
-      const aOnes = a % 10; const aTens = Math.floor(a/10);
-      const bOnes = rnd(1, 9 - aOnes);
-      const bTens = rnd(1, 9 - aTens);
-      return [a, bTens*10 + bOnes];
+function kamacurasMini() {
+  return '<svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg">'
+    + '<ellipse cx="30" cy="40" rx="10" ry="16" fill="#2D6A2D"/>'
+    + '<ellipse cx="30" cy="19" rx="11" ry="10" fill="#3A8A3A"/>'
+    + '<ellipse cx="22" cy="17" rx="6.5" ry="7.5" fill="#880088"/>'
+    + '<ellipse cx="38" cy="17" rx="6.5" ry="7.5" fill="#880088"/>'
+    + '<ellipse cx="22" cy="17" rx="3.5" ry="4.5" fill="#CC00CC"/>'
+    + '<ellipse cx="38" cy="17" rx="3.5" ry="4.5" fill="#CC00CC"/>'
+    + '<circle cx="22" cy="17" r="1.5" fill="white"/><circle cx="38" cy="17" r="1.5" fill="white"/>'
+    + '<line x1="26" y1="11" x2="18" y2="2" stroke="#2D6A2D" stroke-width="2.2" stroke-linecap="round"/>'
+    + '<line x1="34" y1="11" x2="42" y2="2" stroke="#2D6A2D" stroke-width="2.2" stroke-linecap="round"/>'
+    + '<path d="M20,29 Q7,23 5,13 Q11,9 16,18 Q20,24 22,30Z" fill="#1A4A1A"/>'
+    + '<path d="M40,29 Q53,23 55,13 Q49,9 44,18 Q40,24 38,30Z" fill="#1A4A1A"/>'
+    + '<line x1="22" y1="50" x2="10" y2="58" stroke="#2D6A2D" stroke-width="2.5" stroke-linecap="round"/>'
+    + '<line x1="38" y1="50" x2="50" y2="58" stroke="#2D6A2D" stroke-width="2.5" stroke-linecap="round"/>'
+    + '</svg>';
+}
+
+function anguirusMini() {
+  return '<svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg">'
+    + '<ellipse cx="34" cy="40" rx="22" ry="14" fill="#8B6914"/>'
+    + '<polygon points="16,36 13,23 20,34" fill="#6B4E10"/>'
+    + '<polygon points="24,30 22,17 29,29" fill="#6B4E10"/>'
+    + '<polygon points="32,27 32,14 38,27" fill="#6B4E10"/>'
+    + '<polygon points="40,30 42,17 47,29" fill="#6B4E10"/>'
+    + '<polygon points="48,34 51,23 55,34" fill="#6B4E10"/>'
+    + '<ellipse cx="14" cy="40" rx="11" ry="9" fill="#9B7824"/>'
+    + '<circle cx="9" cy="37" r="3.5" fill="#333"/><circle cx="9" cy="37" r="1.8" fill="#FFD700"/>'
+    + '<path d="M55,42 Q64,40 62,47 Q57,52 53,46Z" fill="#6B4E10"/>'
+    + '<rect x="18" y="50" width="8" height="10" rx="3" fill="#7A5E12"/>'
+    + '<rect x="30" y="50" width="8" height="10" rx="3" fill="#7A5E12"/>'
+    + '<rect x="42" y="50" width="8" height="10" rx="3" fill="#7A5E12"/>'
+    + '</svg>';
+}
+
+function kingGhidorahMini() {
+  return '<svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg">'
+    + '<ellipse cx="30" cy="48" rx="16" ry="10" fill="#B8860B"/>'
+    // wings
+    + '<path d="M14,44 Q4,36 7,25" fill="none" stroke="#B8860B" stroke-width="4" stroke-linecap="round"/>'
+    + '<path d="M46,44 Q56,36 53,25" fill="none" stroke="#B8860B" stroke-width="4" stroke-linecap="round"/>'
+    // necks
+    + '<path d="M22,40 Q18,30 12,20" stroke="#DAA520" stroke-width="5" fill="none" stroke-linecap="round"/>'
+    + '<path d="M30,38 Q30,26 30,14" stroke="#FFD700" stroke-width="5" fill="none" stroke-linecap="round"/>'
+    + '<path d="M38,40 Q42,30 48,20" stroke="#DAA520" stroke-width="5" fill="none" stroke-linecap="round"/>'
+    // heads
+    + '<ellipse cx="12" cy="17" rx="9" ry="7" fill="#DAA520"/>'
+    + '<ellipse cx="30" cy="11" rx="9" ry="7" fill="#FFD700"/>'
+    + '<ellipse cx="48" cy="17" rx="9" ry="7" fill="#DAA520"/>'
+    // eyes
+    + '<circle cx="9" cy="15" r="2" fill="red"/><circle cx="14" cy="15" r="2" fill="red"/>'
+    + '<circle cx="27" cy="9" r="2" fill="red"/><circle cx="33" cy="9" r="2" fill="red"/>'
+    + '<circle cx="45" cy="15" r="2" fill="red"/><circle cx="50" cy="15" r="2" fill="red"/>'
+    // horns on middle head
+    + '<line x1="27" y1="6" x2="24" y2="1" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>'
+    + '<line x1="33" y1="6" x2="36" y2="1" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>'
+    + '</svg>';
+}
+
+// ============================================================
+// CHARACTER FORM HELPERS
+// ============================================================
+var GODZILLA_FORMS = {
+  1: '第一形態', 2: '第二形態', 3: '原子力ゴジラ', 4: 'バーニングゴジラ', 5: 'メカゴジラ'
+};
+var MOTHRA_FORMS = {
+  1: 'モスラ', 2: 'アクアモスラ', 3: 'レインボーモスラ', 4: 'アイスモスラ'
+};
+
+function getLevelGodzillaForm(levelId) {
+  if (levelId <= 2) return 1;
+  if (levelId <= 4) return 2;
+  if (levelId <= 6) return 3;
+  if (levelId <= 8) return 4;
+  return 5;
+}
+
+function getLevelMothraForm(levelId) {
+  if (levelId <= 3) return 1;
+  if (levelId <= 5) return 2;
+  if (levelId <= 7) return 3;
+  return 4;
+}
+
+function getPlayerGodzillaForm() {
+  var maxCleared = 0;
+  Object.keys(state.progress).forEach(function(k) {
+    if (state.progress[k] && state.progress[k].stars > 0) {
+      maxCleared = Math.max(maxCleared, parseInt(k));
     }
-  },
-  { id: 8, name: "チャレンジ！",  icon: "🏆", color: "#E17055", desc: "2けた + 2けた",
-    gen: () => [rnd(11,79), rnd(11,79)] },
-  { id: 9, name: "ひゃくのくに", icon: "🌍", color: "#6C5CE7", desc: "3けた + 1〜2けた",
-    gen: () => [rnd(100,299), rnd(10,99)] },
-  { id: 10, name: "マスター！",   icon: "👑", color: "#FDCB6E", desc: "3けた + 2〜3けた",
-    gen: () => [rnd(100,599), rnd(100,399)] },
+  });
+  return getLevelGodzillaForm(Math.max(1, maxCleared));
+}
+
+// ============================================================
+// GAME DATA
+// ============================================================
+var LEVEL_CONFIG = [
+  { id:1,  name:'いち＋いち',    icon:'🌱', color:'#81ECEC', monster:null,
+    gen: function(){ var a=rnd(1,5); var b=rnd(1,9-a); return [a,b]; } },
+  { id:2,  name:'もっとたす',    icon:'🌼', color:'#FFEAA7', monster:null,
+    gen: function(){ return [rnd(1,9),rnd(1,9)]; } },
+  { id:3,  name:'10のなかま',    icon:'🌟', color:'#74B9FF', monster:'hedora',
+    gen: function(){ return [10,rnd(1,9)]; } },
+  { id:4,  name:'にじゅうたす',  icon:'🌈', color:'#A29BFE', monster:'anguirus',
+    gen: function(){ return [rnd(1,5)*10, rnd(1,9)]; } },
+  { id:5,  name:'くりあがりなし',icon:'🦋', color:'#55EFC4', monster:'kamacuras',
+    gen: function(){ var a=rnd(10,59); var mb=9-(a%10); return [a, mb>0?rnd(1,mb):1]; } },
+  { id:6,  name:'くりあがり！',  icon:'🚀', color:'#FDCB6E', monster:null,
+    gen: function(){ var t=rnd(1,8)*10; var o=rnd(1,9); var b=10-o+rnd(1,5); return [t+o,b]; } },
+  { id:7,  name:'にけたプラス',  icon:'⚡', color:'#FF7675', monster:null,
+    gen: function(){
+      var a=rnd(11,49); var ao=a%10; var at=Math.floor(a/10);
+      return [a, rnd(1,9-at)*10+rnd(1,9-ao)];
+    } },
+  { id:8,  name:'チャレンジ！',  icon:'🏆', color:'#E17055', monster:null,
+    gen: function(){ return [rnd(11,79),rnd(11,79)]; } },
+  { id:9,  name:'ひゃくのくに', icon:'🌍', color:'#6C5CE7', monster:'ghidorah',
+    gen: function(){ return [rnd(100,299),rnd(10,99)]; } },
+  { id:10, name:'マスター！',    icon:'👑', color:'#FDCB6E', monster:'ghidorah',
+    gen: function(){ return [rnd(100,599),rnd(100,399)]; } },
 ];
 
-const TOTAL_Q = 10;
+var TOTAL_Q = 10;
 
-// Speech messages
-const CORRECT_MSGS = ["ガオー！すごい！✨", "やったね！🎉", "かんぺき！⭐", "さすが！！🎊", "だいせいかい！🌟", "ゴジラもびっくり！💪", "その調子！✨", "ブラボー！🎶"];
-const WRONG_MSGS = ["もう一回！💪", "おしい！", "がんばれ！⚡", "つぎはいけるよ！"];
-const INTRO_MSGS = ["いくつになるかな？", "こたえはどれ？", "さあ、とくよ！", "かんがえてみよう🤔", "できるかな？✨"];
+var CORRECT_MSGS = ['ガオー！すごい！✨','やったね！🎉','かんぺき！⭐','さすが！！🎊','だいせいかい！🌟','ゴジラもびっくり！💪','その調子！✨','ブラボー！🎶'];
+var WRONG_MSGS   = ['もう一回！💪','おしい！','がんばれ！⚡','つぎはいけるよ！'];
+var INTRO_MSGS   = ['いくつになるかな？','こたえはどれ？','さあ、とくよ！','かんがえてみよう🤔','できるかな？✨'];
 
 function rnd(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 
-// ==================== STATE ====================
-let state = {
+// ============================================================
+// STATE
+// ============================================================
+var state = {
   currentLevel: 1,
   questions: [],
   qIndex: 0,
@@ -701,161 +658,153 @@ let state = {
   progress: JSON.parse(localStorage.getItem('mathProgress') || '{}'),
 };
 
-function saveProgress() {
-  localStorage.setItem('mathProgress', JSON.stringify(state.progress));
-}
-
-function getLevelStars(id) { return state.progress[id]?.stars || 0; }
+function saveProgress() { localStorage.setItem('mathProgress', JSON.stringify(state.progress)); }
+function getLevelStars(id) { return (state.progress[id] && state.progress[id].stars) || 0; }
 function isLevelUnlocked(id) {
   if (id === 1) return true;
-  return state.progress[id-1]?.stars > 0;
+  return state.progress[id-1] && state.progress[id-1].stars > 0;
 }
 
-// ==================== AUDIO ====================
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
-let audioCtx = null;
-
-function getAudio() {
-  if (!audioCtx) audioCtx = new AudioCtx();
-  return audioCtx;
-}
+// ============================================================
+// AUDIO
+// ============================================================
+var AudioCtx = window.AudioContext || window.webkitAudioContext;
+var audioCtx = null;
+function getAudio() { if (!audioCtx) audioCtx = new AudioCtx(); return audioCtx; }
 
 function playTone(type) {
   try {
-    const ctx = getAudio();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
+    var ctx = getAudio();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
     if (type === 'correct') {
       osc.frequency.setValueAtTime(523, ctx.currentTime);
       osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
       osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
       gain.gain.setValueAtTime(0.3, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.5);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
     } else if (type === 'wrong') {
       osc.frequency.setValueAtTime(220, ctx.currentTime);
       osc.frequency.setValueAtTime(180, ctx.currentTime + 0.15);
       gain.gain.setValueAtTime(0.2, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
     } else if (type === 'win') {
-      const freqs = [523, 659, 784, 1047];
-      freqs.forEach((f, i) => {
-        const o2 = ctx.createOscillator();
-        const g2 = ctx.createGain();
+      [523,659,784,1047].forEach(function(f, i) {
+        var o2 = ctx.createOscillator(); var g2 = ctx.createGain();
         o2.connect(g2); g2.connect(ctx.destination);
         o2.frequency.value = f;
-        g2.gain.setValueAtTime(0.25, ctx.currentTime + i * 0.12);
-        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.4);
-        o2.start(ctx.currentTime + i * 0.12);
-        o2.stop(ctx.currentTime + i * 0.12 + 0.4);
+        g2.gain.setValueAtTime(0.25, ctx.currentTime + i*0.12);
+        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.12 + 0.4);
+        o2.start(ctx.currentTime + i*0.12); o2.stop(ctx.currentTime + i*0.12 + 0.4);
       });
     }
   } catch(e) {}
 }
 
-// ==================== CONFETTI ====================
-const canvas = document.getElementById('confetti-canvas');
-const ctx2d = canvas.getContext('2d');
-let confettiPieces = [];
-let confettiAnim = null;
+// ============================================================
+// CONFETTI
+// ============================================================
+var canvas = document.getElementById('confetti-canvas');
+var ctx2d = canvas.getContext('2d');
+var confettiPieces = [];
+var confettiAnim = null;
 
 function startConfetti() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
   confettiPieces = [];
-  const colors = ['#FF6B6B','#FFE66D','#4ECDC4','#A29BFE','#55EFC4','#FDCB6E','#FF9FF3'];
-  for (let i = 0; i < 120; i++) {
+  var colors = ['#FF6B6B','#FFE66D','#4ECDC4','#A29BFE','#55EFC4','#FDCB6E','#00CCFF','#FF9FF3'];
+  for (var i = 0; i < 130; i++) {
     confettiPieces.push({
-      x: Math.random() * canvas.width,
-      y: -20,
+      x: Math.random()*canvas.width, y: -20,
       w: rnd(8,18), h: rnd(6,12),
-      color: colors[rnd(0, colors.length-1)],
-      vx: (Math.random()-0.5) * 4,
-      vy: rnd(3,8),
-      rot: Math.random() * 360,
-      rotV: (Math.random()-0.5)*8,
+      color: colors[rnd(0,colors.length-1)],
+      vx: (Math.random()-0.5)*4, vy: rnd(3,8),
+      rot: Math.random()*360, rotV: (Math.random()-0.5)*8,
     });
   }
   if (confettiAnim) cancelAnimationFrame(confettiAnim);
   animateConfetti();
   setTimeout(stopConfetti, 3000);
 }
-
 function animateConfetti() {
-  ctx2d.clearRect(0, 0, canvas.width, canvas.height);
-  confettiPieces.forEach(p => {
-    ctx2d.save();
-    ctx2d.translate(p.x, p.y);
-    ctx2d.rotate(p.rot * Math.PI / 180);
-    ctx2d.fillStyle = p.color;
-    ctx2d.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+  ctx2d.clearRect(0,0,canvas.width,canvas.height);
+  confettiPieces.forEach(function(p) {
+    ctx2d.save(); ctx2d.translate(p.x,p.y); ctx2d.rotate(p.rot*Math.PI/180);
+    ctx2d.fillStyle = p.color; ctx2d.fillRect(-p.w/2,-p.h/2,p.w,p.h);
     ctx2d.restore();
-    p.x += p.vx;
-    p.y += p.vy;
-    p.rot += p.rotV;
-    p.vy += 0.1;
+    p.x+=p.vx; p.y+=p.vy; p.rot+=p.rotV; p.vy+=0.1;
   });
-  confettiPieces = confettiPieces.filter(p => p.y < canvas.height + 20);
+  confettiPieces = confettiPieces.filter(function(p){ return p.y < canvas.height+20; });
   if (confettiPieces.length > 0) confettiAnim = requestAnimationFrame(animateConfetti);
 }
-
 function stopConfetti() {
   confettiPieces = [];
-  ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+  ctx2d.clearRect(0,0,canvas.width,canvas.height);
 }
 
-// ==================== SCREENS ====================
+// ============================================================
+// SCREENS
+// ============================================================
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
   if (id === 'levels') renderLevels();
+  if (id === 'home') updateHomeMascot();
 }
 
-// ==================== LEVELS ====================
+function updateHomeMascot() {
+  var form = getPlayerGodzillaForm();
+  document.getElementById('home-mascot').innerHTML = godzillaSVG(120, 138, form);
+  document.getElementById('home-form-badge').textContent = 'ゴジラ ' + GODZILLA_FORMS[form];
+}
+
+// ============================================================
+// LEVELS
+// ============================================================
+var MONSTER_FNS = { hedora: hedoraMini, kamacuras: kamacurasMini, anguirus: anguirusMini, ghidorah: kingGhidorahMini };
+
 function renderLevels() {
-  const grid = document.getElementById('levels-grid');
+  var grid = document.getElementById('levels-grid');
   grid.innerHTML = '';
-
-  let total = 0;
-  LEVEL_CONFIG.forEach(lv => { total += getLevelStars(lv.id); });
-
-  document.getElementById('total-stars-display').textContent = `${total} / 30 ほし`;
-  document.getElementById('total-stars-emoji').textContent =
-    total >= 30 ? '🏆' : total >= 20 ? '🌟' : total >= 10 ? '⭐' : '';
+  var total = 0;
+  LEVEL_CONFIG.forEach(function(lv){ total += getLevelStars(lv.id); });
+  document.getElementById('total-stars-display').textContent = total + ' / 30 ほし';
+  document.getElementById('total-stars-emoji').textContent = total >= 30 ? '🏆' : total >= 20 ? '🌟' : total >= 10 ? '⭐' : '';
   document.getElementById('all-done-badge').style.display = total >= 30 ? 'block' : 'none';
 
-  LEVEL_CONFIG.forEach(lv => {
-    const stars = getLevelStars(lv.id);
-    const unlocked = isLevelUnlocked(lv.id);
-    const completed = stars > 0;
+  LEVEL_CONFIG.forEach(function(lv) {
+    var stars = getLevelStars(lv.id);
+    var unlocked = isLevelUnlocked(lv.id);
+    var completed = stars > 0;
+    var card = document.createElement('div');
+    card.className = 'level-card ' + (unlocked ? (completed ? 'completed' : 'unlocked') : 'locked');
 
-    const card = document.createElement('div');
-    card.className = `level-card ${unlocked ? (completed ? 'completed' : 'unlocked') : 'locked'}`;
-    card.style.setProperty('--card-color', lv.color);
+    var starStr = completed ? '⭐'.repeat(stars) + '☆'.repeat(3-stars) : (unlocked ? '☆☆☆' : '');
+    var iconHTML = unlocked && lv.monster && MONSTER_FNS[lv.monster]
+      ? MONSTER_FNS[lv.monster]()
+      : '<span style="font-size:30px">' + (unlocked ? lv.icon : '🔒') + '</span>';
 
-    const starStr = completed
-      ? '⭐'.repeat(stars) + '☆'.repeat(3-stars)
-      : (unlocked ? '☆☆☆' : '');
+    var gForm = getLevelGodzillaForm(lv.id);
+    var gLabel = unlocked ? ('<div class="level-gform">G ' + GODZILLA_FORMS[gForm] + '</div>') : '';
 
-    card.innerHTML = `
-      <div class="level-num">Lv.${lv.id}</div>
-      <div class="level-icon">${unlocked ? lv.icon : '🔒'}</div>
-      <div class="level-name">${lv.name}</div>
-      <div class="level-stars">${starStr}</div>
-    `;
+    card.innerHTML =
+      '<div class="level-num">Lv.' + lv.id + '</div>' +
+      '<div class="level-icon">' + iconHTML + '</div>' +
+      '<div class="level-name">' + lv.name + '</div>' +
+      gLabel +
+      '<div class="level-stars">' + starStr + '</div>';
 
-    if (unlocked) card.addEventListener('click', () => startLevel(lv.id));
+    if (unlocked) card.addEventListener('click', (function(id){ return function(){ startLevel(id); }; })(lv.id));
     grid.appendChild(card);
   });
 }
 
-// ==================== GAME ====================
+// ============================================================
+// GAME
+// ============================================================
 function startLevel(id) {
   state.currentLevel = id;
   state.qIndex = 0;
@@ -867,106 +816,89 @@ function startLevel(id) {
 }
 
 function generateQuestions(levelId) {
-  const lv = LEVEL_CONFIG[levelId - 1];
-  const qs = [];
-  for (let i = 0; i < TOTAL_Q; i++) {
-    const [a, b] = lv.gen();
-    qs.push({ a, b, answer: a + b });
+  var lv = LEVEL_CONFIG[levelId - 1];
+  var qs = [];
+  for (var i = 0; i < TOTAL_Q; i++) {
+    var pair = lv.gen();
+    qs.push({ a: pair[0], b: pair[1], answer: pair[0] + pair[1] });
   }
   return qs;
 }
 
 function renderQuestion() {
-  const q = state.questions[state.qIndex];
-  const lv = LEVEL_CONFIG[state.currentLevel - 1];
+  var q = state.questions[state.qIndex];
+  var gForm = getLevelGodzillaForm(state.currentLevel);
 
-  // Header
-  document.getElementById('level-badge').textContent = `Lv.${state.currentLevel}`;
-  document.getElementById('question-count').textContent = `${state.qIndex + 1} / ${TOTAL_Q}もん`;
-  document.getElementById('progress-bar').style.width = `${(state.qIndex / TOTAL_Q) * 100}%`;
+  document.getElementById('level-badge').textContent = 'Lv.' + state.currentLevel;
+  document.getElementById('question-count').textContent = (state.qIndex + 1) + ' / ' + TOTAL_Q + 'もん';
+  document.getElementById('progress-bar').style.width = ((state.qIndex / TOTAL_Q) * 100) + '%';
+  document.getElementById('equation-box').textContent = q.a + ' + ' + q.b + ' = ?';
+  document.getElementById('speech-bubble').textContent = INTRO_MSGS[Math.floor(Math.random() * INTRO_MSGS.length)];
+  document.getElementById('form-label').textContent = 'ゴジラ ' + GODZILLA_FORMS[gForm];
+  document.getElementById('game-mascot').innerHTML = godzillaSVG(72, 82, gForm);
 
-  // Equation
-  document.getElementById('equation-box').textContent = `${q.a} + ${q.b} = ?`;
-
-  // Speech
-  document.getElementById('speech-bubble').textContent =
-    INTRO_MSGS[Math.floor(Math.random() * INTRO_MSGS.length)];
-
-  // Mascot (Godzilla + level icon)
-  document.getElementById('game-mascot').innerHTML =
-    `<span style="font-size:48px">${lv.icon}</span> ${godzillaSVG(68, 78)}`;
-
-  // Choices
-  const choices = generateChoices(q.answer, state.currentLevel);
-  const grid = document.getElementById('choices-grid');
+  var choices = generateChoices(q.answer, state.currentLevel);
+  var grid = document.getElementById('choices-grid');
   grid.innerHTML = '';
-
-  choices.forEach(val => {
-    const btn = document.createElement('button');
+  choices.forEach(function(val) {
+    var btn = document.createElement('button');
     btn.className = 'choice-btn';
     btn.textContent = val;
-    btn.addEventListener('click', () => handleChoice(btn, val, q.answer));
+    btn.addEventListener('click', (function(b,v,a){ return function(){ handleChoice(b,v,a); }; })(btn, val, q.answer));
     grid.appendChild(btn);
   });
-
   state.answering = false;
 }
 
 function generateChoices(correct, level) {
-  const choices = new Set([correct]);
-  const range = level <= 2 ? 3 : level <= 5 ? 5 : level <= 7 ? 8 : 15;
-
-  while (choices.size < 4) {
-    const wrong = correct + (Math.random() < 0.5 ? 1 : -1) * rnd(1, range);
-    if (wrong > 0 && wrong !== correct) choices.add(wrong);
+  var choices = {};
+  choices[correct] = true;
+  var range = level <= 2 ? 3 : level <= 5 ? 5 : level <= 7 ? 8 : 15;
+  var tries = 0;
+  while (Object.keys(choices).length < 4 && tries < 50) {
+    tries++;
+    var wrong = correct + (Math.random() < 0.5 ? 1 : -1) * rnd(1, range);
+    if (wrong > 0 && !choices[wrong]) choices[wrong] = true;
   }
-
-  return [...choices].sort(() => Math.random() - 0.5);
+  return Object.keys(choices).map(Number).sort(function(){ return Math.random()-0.5; });
 }
 
 function handleChoice(btn, val, answer) {
   if (state.answering) return;
   state.answering = true;
-
-  const allBtns = document.querySelectorAll('.choice-btn');
-  allBtns.forEach(b => b.disabled = true);
+  var allBtns = document.querySelectorAll('.choice-btn');
+  allBtns.forEach(function(b){ b.disabled = true; });
 
   if (val === answer) {
     btn.classList.add('correct');
     state.score++;
     playTone('correct');
     showFeedback('⭕');
-    document.getElementById('speech-bubble').textContent =
-      CORRECT_MSGS[Math.floor(Math.random() * CORRECT_MSGS.length)];
+    document.getElementById('speech-bubble').textContent = CORRECT_MSGS[Math.floor(Math.random()*CORRECT_MSGS.length)];
   } else {
     btn.classList.add('wrong');
-    // Highlight correct
-    allBtns.forEach(b => { if (parseInt(b.textContent) === answer) b.classList.add('correct'); });
+    allBtns.forEach(function(b){ if (parseInt(b.textContent) === answer) b.classList.add('correct'); });
     playTone('wrong');
     showFeedback('❌');
-    document.getElementById('speech-bubble').textContent =
-      WRONG_MSGS[Math.floor(Math.random() * WRONG_MSGS.length)];
+    document.getElementById('speech-bubble').textContent = WRONG_MSGS[Math.floor(Math.random()*WRONG_MSGS.length)];
   }
 
-  setTimeout(() => {
+  setTimeout(function() {
     state.qIndex++;
-    if (state.qIndex >= TOTAL_Q) {
-      showResult();
-    } else {
-      renderQuestion();
-    }
+    if (state.qIndex >= TOTAL_Q) showResult();
+    else renderQuestion();
   }, 900);
 }
 
 function showFeedback(emoji) {
-  const el = document.getElementById('feedback');
+  var el = document.getElementById('feedback');
   el.textContent = emoji;
   el.classList.remove('hide');
   el.classList.add('show');
-  setTimeout(() => {
+  setTimeout(function() {
     el.classList.remove('show');
     el.classList.add('hide');
-    setTimeout(() => el.classList.remove('hide'), 300);
+    setTimeout(function(){ el.classList.remove('hide'); }, 300);
   }, 600);
 }
 
@@ -974,93 +906,86 @@ function confirmBack() {
   if (confirm('やめますか？(レベルえらびにもどります)')) showScreen('levels');
 }
 
-// ==================== RESULT ====================
+// ============================================================
+// RESULT
+// ============================================================
 function showResult() {
-  const score = state.score;
-  const pct = score / TOTAL_Q;
-  const stars = pct >= 0.9 ? 3 : pct >= 0.7 ? 2 : pct >= 0.5 ? 1 : 0;
+  var score = state.score;
+  var pct = score / TOTAL_Q;
+  var stars = pct >= 0.9 ? 3 : pct >= 0.7 ? 2 : pct >= 0.5 ? 1 : 0;
 
-  // Save best
-  const prev = state.progress[state.currentLevel]?.stars || 0;
+  var prev = (state.progress[state.currentLevel] && state.progress[state.currentLevel].stars) || 0;
   state.progress[state.currentLevel] = {
     stars: Math.max(prev, stars),
-    score: Math.max(state.progress[state.currentLevel]?.score || 0, score),
+    score: Math.max((state.progress[state.currentLevel] && state.progress[state.currentLevel].score) || 0, score),
   };
+  if (stars > 0 && state.currentLevel < 10) {
+    if (!state.progress[state.currentLevel + 1]) state.progress[state.currentLevel + 1] = {};
+  }
   saveProgress();
 
-  // Unlock next
-  if (stars > 0 && state.currentLevel < 10) {
-    if (!state.progress[state.currentLevel + 1]) {
-      state.progress[state.currentLevel + 1] = {};
-    }
-    saveProgress();
-  }
+  var gForm = getLevelGodzillaForm(state.currentLevel);
+  var mForm = getLevelMothraForm(state.currentLevel);
 
-  const titles = stars === 3
-    ? ['かんぺき！！', 'パーフェクト！', 'すごすぎる！！'][rnd(0,2)]
-    : stars === 2
-    ? ['やるじゃん！', 'さすが！', 'もうすこしだ！'][rnd(0,2)]
-    : stars === 1
-    ? ['よくがんばった！', 'ファイト！', 'つぎはもっと！'][rnd(0,2)]
+  var resultMascotEl = document.getElementById('result-mascot');
+  resultMascotEl.style.animation = 'none';
+  resultMascotEl.offsetHeight;
+  resultMascotEl.style.animation = '';
+
+  var formName;
+  if (stars === 3) {
+    resultMascotEl.innerHTML = mothraSVG(120, 104, mForm);
+    formName = MOTHRA_FORMS[mForm] + ' が祝福！';
+  } else {
+    resultMascotEl.innerHTML = godzillaSVG(104, 120, gForm);
+    formName = 'ゴジラ ' + GODZILLA_FORMS[gForm];
+  }
+  document.getElementById('result-form-name').textContent = formName;
+
+  var titles = stars === 3
+    ? ['かんぺき！！','パーフェクト！','すごすぎる！！'][rnd(0,2)]
+    : stars === 2 ? ['やるじゃん！','さすが！','もうすこしだ！'][rnd(0,2)]
+    : stars === 1 ? ['よくがんばった！','ファイト！','つぎはもっと！'][rnd(0,2)]
     : 'まだまだいける！';
 
-  const messages = {
-    3: '🎊 ぜんもんせいかい！　キミは天才だ！！',
-    2: `✨ ${score}もん せいかい！　もういちど！`,
-    1: `💪 ${score}もん せいかい！　れんしゅうしよう！`,
-    0: `😊 ${score}もん せいかい！　いっしょにれんしゅう！`,
+  var messages = {
+    3: '🎊 ぜんもんせいかい！キミは天才だ！！',
+    2: '✨ ' + score + 'もん せいかい！もういちど！',
+    1: '💪 ' + score + 'もん せいかい！れんしゅうしよう！',
+    0: '😊 ' + score + 'もん せいかい！いっしょにれんしゅう！',
   };
-
-  // ゴジラ or モスラ でお祝い！
-  const resultMascotEl = document.getElementById('result-mascot');
-  resultMascotEl.style.animation = 'none';
-  resultMascotEl.offsetHeight; // reflow to restart animation
-  resultMascotEl.style.animation = '';
-  if (stars === 3) {
-    // パーフェクトはモスラ登場！
-    resultMascotEl.innerHTML = mothraSVG(118, 100);
-  } else {
-    resultMascotEl.innerHTML = godzillaSVG(100, 115);
-  }
 
   document.getElementById('result-title').textContent = titles;
   document.getElementById('result-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
-  document.getElementById('result-score').textContent = `${score} / ${TOTAL_Q}もん せいかい！`;
+  document.getElementById('result-score').textContent = score + ' / ' + TOTAL_Q + 'もん せいかい！';
   document.getElementById('result-message').textContent = messages[stars];
 
-  const btnNext = document.getElementById('btn-next');
+  var btnNext = document.getElementById('btn-next');
   if (state.currentLevel >= 10) {
     btnNext.textContent = '🏆 ぜんぶクリア！';
-    btnNext.onclick = () => showScreen('levels');
+    btnNext.onclick = function(){ showScreen('levels'); };
   } else {
     btnNext.textContent = 'つぎのレベル ▶';
     btnNext.onclick = nextLevel;
   }
 
   showScreen('result');
-
-  if (stars >= 2) {
-    setTimeout(() => { playTone('win'); startConfetti(); }, 300);
-  } else if (stars >= 1) {
-    setTimeout(() => playTone('correct'), 300);
-  }
+  if (stars >= 2) { setTimeout(function(){ playTone('win'); startConfetti(); }, 300); }
+  else if (stars >= 1) { setTimeout(function(){ playTone('correct'); }, 300); }
 }
 
 function nextLevel() {
-  if (state.currentLevel < 10) {
-    startLevel(state.currentLevel + 1);
-  } else {
-    showScreen('levels');
-  }
+  if (state.currentLevel < 10) startLevel(state.currentLevel + 1);
+  else showScreen('levels');
 }
-
 function retryLevel() { startLevel(state.currentLevel); }
 
-// ==================== INIT ====================
-// ホーム画面にゴジラSVGを表示
-document.getElementById('home-mascot').innerHTML = godzillaSVG(120, 138);
+// ============================================================
+// INIT
+// ============================================================
+updateHomeMascot();
 
-window.addEventListener('resize', () => {
+window.addEventListener('resize', function() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 });
