@@ -1,6 +1,5 @@
-// Proxied through Vite dev server to avoid CORS/Safari issues
-const NOMINATIM = '/api/nominatim'
-const OSRM = '/api/osrm'
+const NOMINATIM = 'https://nominatim.openstreetmap.org'
+const OSRM = 'https://router.project-osrm.org'
 
 // ID. Buzz battery model
 export const ID_BUZZ_RANGE_KM = 460 // ID. Buzz Pro Long Range at 100%

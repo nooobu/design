@@ -1,7 +1,7 @@
 // Overpass API — OpenStreetMap data, completely free
 // Rate limit: ~2 req/sec, so we batch carefully
-const OVERPASS_URL = '/api/overpass/api/interpreter'
-const NOMINATIM = '/api/nominatim'
+const OVERPASS_URL = 'https://overpass-api.de/api/interpreter'
+const NOMINATIM = 'https://nominatim.openstreetmap.org'
 
 async function overpassQuery(query) {
   try {
