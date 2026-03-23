@@ -1,0 +1,105 @@
+.map-container {
+  flex: 1;
+  height: 100%;
+}
+
+.map-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  border: 2px solid rgba(255,255,255,0.25);
+  transition: transform 0.15s;
+}
+
+.map-marker:hover {
+  transform: scale(1.15);
+}
+
+/* Leaflet popup overrides */
+.leaflet-popup-content-wrapper {
+  background: #1c2330 !important;
+  color: #e6edf3 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6) !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4;
+}
+
+.leaflet-popup-tip {
+  background: #1c2330 !important;
+}
+
+.leaflet-popup-close-button {
+  color: #8b949e !important;
+  top: 8px !important;
+  right: 8px !important;
+}
+
+.popup {
+  padding: 12px 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  min-width: 175px;
+}
+
+.popup strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: #e6edf3;
+}
+
+.popup p {
+  color: #8b949e;
+  font-size: 12px;
+  margin: 2px 0;
+}
+
+.popup-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+.charge-tag {
+  background: rgba(79, 195, 247, 0.15);
+  color: #4fc3f7;
+  border: 1px solid #4fc3f7;
+}
+
+.camp-tag {
+  background: rgba(129, 199, 132, 0.15);
+  color: #81c784;
+  border: 1px solid #81c784;
+}
+
+.road-tag {
+  background: rgba(206, 147, 216, 0.15);
+  color: #ce93d8;
+  border: 1px solid #ce93d8;
+}
+
+/* Highlight pulse for selected stop */
+@keyframes highlight-pulse {
+  0% { opacity: 1; r: 22; }
+  50% { opacity: 0.5; r: 30; }
+  100% { opacity: 1; r: 22; }
+}
+
+.highlight-pulse {
+  animation: highlight-pulse 1.5s ease-in-out infinite;
+}
