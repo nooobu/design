@@ -6,281 +6,122 @@
   <title>ゴジラ足し算</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; overflow-x: hidden; user-select: none; background: #111; }
 
-    :root {
-      --primary: #FF6B6B;
-      --secondary: #4ECDC4;
-      --yellow: #FFE66D;
-      --purple: #A29BFE;
-      --green: #55EFC4;
-      --orange: #FDCB6E;
-      --bg: #FFF9F0;
-      --dark: #2D3436;
-    }
-
-    body {
-      font-family: 'Helvetica Neue', Arial, sans-serif;
-      background: var(--bg);
-      min-height: 100vh;
-      overflow-x: hidden;
-      user-select: none;
-    }
-
-    .screen {
-      display: none;
-      min-height: 100vh;
-      width: 100%;
-      padding: 20px;
-      flex-direction: column;
-      align-items: center;
-    }
+    .screen { display: none; min-height: 100vh; width: 100%; padding: 20px; flex-direction: column; align-items: center; }
     .screen.active { display: flex; }
 
     /* HOME */
-    #home {
-      background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      justify-content: center;
-      gap: 20px;
-      text-align: center;
-    }
-    .home-mascot {
-      animation: bounce 2s ease-in-out infinite;
-      filter: drop-shadow(0 8px 24px rgba(0,200,255,0.4));
-      display: flex; align-items: center; justify-content: center;
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-20px); }
-    }
-    .home-title {
-      font-size: clamp(36px, 9vw, 60px);
-      font-weight: 900;
-      color: white;
-      text-shadow: 0 0 20px rgba(0,200,255,0.6), 0 4px 0 rgba(0,0,0,0.3);
-      letter-spacing: 3px;
-      line-height: 1.2;
-    }
-    .home-subtitle {
-      font-size: clamp(15px, 3.5vw, 20px);
-      color: rgba(255,255,255,0.85);
-      font-weight: 600;
-    }
-    .form-badge-home {
-      background: rgba(0,200,255,0.2);
-      border: 2px solid rgba(0,200,255,0.5);
-      border-radius: 20px;
-      padding: 6px 18px;
-      color: #00CCFF;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-    .btn-start {
-      background: linear-gradient(135deg, #00CCFF, #0066FF);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      padding: 20px 60px;
-      font-size: clamp(22px, 5vw, 30px);
-      font-weight: 900;
-      cursor: pointer;
-      box-shadow: 0 8px 0 rgba(0,0,0,0.3), 0 0 30px rgba(0,150,255,0.4);
-      transition: transform 0.1s, box-shadow 0.1s;
-      margin-top: 6px;
-    }
+    #home { background: linear-gradient(160deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%); justify-content: center; gap: 20px; text-align: center; }
+    .home-mascot { animation: bounce 2s ease-in-out infinite; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 8px 24px rgba(0,200,255,0.4)); }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+    .home-title { font-size: clamp(36px,9vw,60px); font-weight: 900; color: white; text-shadow: 0 0 20px rgba(0,200,255,0.6),0 4px 0 rgba(0,0,0,0.3); letter-spacing: 3px; line-height: 1.2; }
+    .home-subtitle { font-size: clamp(14px,3.5vw,18px); color: rgba(255,255,255,0.8); font-weight: 600; }
+    .home-badge { background: rgba(0,200,255,0.15); border: 2px solid rgba(0,200,255,0.4); border-radius: 20px; padding: 6px 18px; color: #00CCFF; font-size: 14px; font-weight: 700; }
+    .btn-start { background: linear-gradient(135deg,#00CCFF,#0066FF); color: white; border: none; border-radius: 50px; padding: 20px 60px; font-size: clamp(22px,5vw,30px); font-weight: 900; cursor: pointer; box-shadow: 0 8px 0 rgba(0,0,0,0.3),0 0 30px rgba(0,150,255,0.4); transition: transform 0.1s,box-shadow 0.1s; }
     .btn-start:active { transform: translateY(4px); box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
 
     /* LEVEL SELECT */
-    #levels { background: var(--bg); gap: 16px; padding-bottom: 40px; }
-    .levels-header { text-align: center; padding: 10px 0 4px; width: 100%; }
-    .levels-header h2 { font-size: clamp(22px, 5.5vw, 34px); font-weight: 900; color: var(--dark); }
-    .levels-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 16px; width: 100%; max-width: 600px;
-    }
-    .level-card {
-      background: white; border-radius: 24px; padding: 16px 10px;
-      text-align: center; cursor: pointer;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.08);
-      border: 3px solid transparent;
-      transition: transform 0.15s, box-shadow 0.15s;
-      position: relative; overflow: hidden;
-    }
-    .level-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
-    }
-    .level-card.unlocked::before { background: var(--secondary); }
-    .level-card.completed::before { background: var(--green); }
+    #levels { background: #F0F4F8; gap: 14px; padding-bottom: 40px; }
+    .levels-header { text-align: center; padding: 8px 0 2px; width: 100%; }
+    .levels-header h2 { font-size: clamp(20px,5vw,32px); font-weight: 900; color: #2D3436; }
+    .levels-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(140px,1fr)); gap: 14px; width: 100%; max-width: 620px; }
+    .level-card { background: white; border-radius: 22px; padding: 14px 8px; text-align: center; cursor: pointer; box-shadow: 0 5px 0 rgba(0,0,0,0.08); border: 3px solid transparent; transition: transform 0.15s,box-shadow 0.15s; position: relative; overflow: hidden; }
+    .level-card::before { content:''; position:absolute; top:0; left:0; right:0; height:5px; }
+    .level-card.unlocked::before { background: #4ECDC4; }
+    .level-card.completed::before { background: #55EFC4; }
     .level-card.locked::before { background: #dfe6e9; }
-    .level-card.unlocked { border-color: var(--secondary); }
-    .level-card.completed { border-color: var(--green); }
-    .level-card.locked { opacity: 0.5; cursor: not-allowed; }
-    .level-card:not(.locked):active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.08); }
-    .level-num { font-size: 32px; font-weight: 900; color: var(--dark); }
-    .level-icon { font-size: 28px; margin: 4px 0; min-height: 44px; display: flex; align-items: center; justify-content: center; }
-    .level-name { font-size: 12px; font-weight: 700; color: #636e72; margin-top: 2px; }
-    .level-gform { font-size: 10px; font-weight: 700; color: #0088CC; margin-top: 2px; background: #E8F8FF; border-radius: 8px; padding: 2px 6px; display: inline-block; }
-    .level-stars { margin-top: 6px; font-size: 18px; letter-spacing: 2px; min-height: 22px; }
-    .lock-icon { font-size: 28px; color: #b2bec3; }
-    .total-stars-bar {
-      background: white; border-radius: 20px; padding: 14px 24px;
-      display: flex; align-items: center; gap: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      width: 100%; max-width: 600px;
-    }
-    .total-stars-bar span:first-child { font-size: 28px; }
-    .total-stars-bar span:last-child { font-size: clamp(18px,4vw,22px); font-weight: 800; color: var(--dark); }
-    .all-done-badge {
-      background: linear-gradient(135deg, #FFE66D, #FDCB6E);
-      border-radius: 16px; padding: 10px 20px;
-      font-size: clamp(14px,3vw,18px); font-weight: 800; color: var(--dark);
-      text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-      max-width: 600px; width: 100%;
-    }
+    .level-card.unlocked { border-color: #4ECDC4; }
+    .level-card.completed { border-color: #55EFC4; }
+    .level-card.locked { opacity: 0.45; cursor: not-allowed; }
+    .level-card:not(.locked):active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.08); }
+    .lc-num { font-size: 28px; font-weight: 900; color: #2D3436; }
+    .lc-thumb { height: 52px; display: flex; align-items: center; justify-content: center; margin: 4px 0; }
+    .lc-name { font-size: 11px; font-weight: 700; color: #636e72; }
+    .lc-char { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 8px; display: inline-block; margin-top: 2px; }
+    .lc-stars { margin-top: 5px; font-size: 17px; letter-spacing: 2px; min-height: 20px; }
+    .total-stars-bar { background: white; border-radius: 18px; padding: 12px 22px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 620px; }
+    .total-stars-bar span:first-child { font-size: 26px; }
+    .total-stars-bar span:last-child { font-size: clamp(17px,4vw,21px); font-weight: 800; color: #2D3436; }
+    .all-done-badge { background: linear-gradient(135deg,#FFE66D,#FDCB6E); border-radius: 14px; padding: 10px 20px; font-size: clamp(13px,3vw,17px); font-weight: 800; color: #2D3436; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.12); max-width: 620px; width: 100%; }
 
     /* GAME */
-    #game {
-      background: linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-      gap: 0; padding: 16px; justify-content: flex-start;
-    }
-    .game-header {
-      width: 100%; max-width: 600px;
-      display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
-    }
-    .btn-back {
-      background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
-      width: 48px; height: 48px; font-size: 22px; cursor: pointer;
-      color: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-    }
-    .progress-wrap { flex: 1; background: rgba(255,255,255,0.2); border-radius: 20px; height: 16px; overflow: hidden; }
-    .progress-bar { height: 100%; background: var(--yellow); border-radius: 20px; transition: width 0.4s ease; }
-    .level-badge {
-      background: rgba(0,200,255,0.2); color: #00CCFF;
-      font-weight: 800; font-size: 14px; padding: 8px 14px; border-radius: 20px; white-space: nowrap;
-      border: 1px solid rgba(0,200,255,0.4);
-    }
-    .question-count { color: rgba(255,255,255,0.85); font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 6px; }
-    .mascot-area {
-      text-align: center; margin-bottom: 6px; min-height: 90px;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .form-label {
-      color: #00CCFF; font-size: 12px; font-weight: 700;
-      background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.3);
-      border-radius: 10px; padding: 2px 8px; text-align: center; margin-bottom: 4px;
-    }
-    .speech-bubble {
-      background: white; border-radius: 20px; padding: 12px 20px;
-      font-size: clamp(17px,4vw,21px); font-weight: 700; color: var(--dark);
-      text-align: center; max-width: 400px; width: 100%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2); margin-bottom: 14px; position: relative;
-    }
-    .speech-bubble::after {
-      content: ''; position: absolute; bottom: -14px; left: 50%;
-      transform: translateX(-50%); border: 8px solid transparent; border-top-color: white;
-    }
-    .equation-box {
-      background: white; border-radius: 28px;
-      padding: clamp(18px,5vw,32px) clamp(22px,6vw,44px);
-      font-size: clamp(50px,13vw,90px); font-weight: 900; color: var(--dark);
-      text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      letter-spacing: 4px; width: 100%; max-width: 500px; margin-bottom: 18px;
-    }
-    .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 500px; }
-    .choice-btn {
-      background: white; border: 4px solid transparent; border-radius: 24px;
-      padding: clamp(16px,4vw,24px) 12px; font-size: clamp(30px,8vw,50px);
-      font-weight: 900; color: var(--dark); cursor: pointer;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.15);
-      transition: transform 0.1s, box-shadow 0.1s;
-      min-height: 88px; display: flex; align-items: center; justify-content: center;
-    }
+    #game { gap: 0; padding: 16px; justify-content: flex-start; transition: background 0.5s; }
+    .game-header { width: 100%; max-width: 600px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .btn-back { background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 46px; height: 46px; font-size: 20px; cursor: pointer; color: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .progress-wrap { flex: 1; background: rgba(255,255,255,0.2); border-radius: 18px; height: 15px; overflow: hidden; }
+    .progress-bar { height: 100%; background: #FFE66D; border-radius: 18px; transition: width 0.4s ease; }
+    .level-badge { background: rgba(255,255,255,0.15); color: white; font-weight: 800; font-size: 14px; padding: 7px 13px; border-radius: 18px; white-space: nowrap; }
+    .q-count { color: rgba(255,255,255,0.88); font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+    .char-label { font-size: 12px; font-weight: 800; border-radius: 10px; padding: 2px 10px; text-align: center; margin-bottom: 6px; display: inline-block; align-self: center; }
+    .mascot-area { text-align: center; margin-bottom: 6px; min-height: 100px; display: flex; align-items: center; justify-content: center; }
+    .speech-bubble { background: white; border-radius: 18px; padding: 11px 18px; font-size: clamp(16px,4vw,20px); font-weight: 700; color: #2D3436; text-align: center; max-width: 400px; width: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); margin-bottom: 12px; position: relative; }
+    .speech-bubble::after { content:''; position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); border:7px solid transparent; border-top-color: white; }
+    .equation-box { background: white; border-radius: 26px; padding: clamp(16px,5vw,30px) clamp(20px,6vw,42px); font-size: clamp(48px,13vw,88px); font-weight: 900; color: #2D3436; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.25); letter-spacing: 3px; width: 100%; max-width: 500px; margin-bottom: 16px; }
+    .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 500px; }
+    .choice-btn { background: white; border: 4px solid transparent; border-radius: 22px; padding: clamp(15px,4vw,23px) 10px; font-size: clamp(28px,8vw,48px); font-weight: 900; color: #2D3436; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.12); transition: transform 0.1s,box-shadow 0.1s; min-height: 85px; display: flex; align-items: center; justify-content: center; }
     .choice-btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.1); }
     .choice-btn.correct { background: #55EFC4; border-color: #00b894; animation: popCorrect 0.4s ease; }
     .choice-btn.wrong { background: #FF7675; border-color: #d63031; animation: shake 0.4s ease; }
     @keyframes popCorrect { 0%{transform:scale(1)} 40%{transform:scale(1.12)} 100%{transform:scale(1)} }
-    @keyframes shake {
-      0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
-      40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
-    }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
 
     /* RESULT */
-    #result {
-      background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      justify-content: center; gap: 18px; text-align: center;
-    }
-    .result-mascot {
-      animation: spin-bounce 1s ease;
-      display: flex; align-items: center; justify-content: center;
-      filter: drop-shadow(0 6px 20px rgba(0,200,255,0.4));
-    }
-    @keyframes spin-bounce {
-      0%{transform:scale(0) rotate(-180deg);opacity:0}
-      60%{transform:scale(1.2) rotate(10deg);opacity:1}
-      100%{transform:scale(1) rotate(0deg)}
-    }
-    .result-title { font-size: clamp(34px,9vw,58px); font-weight: 900; color: white; text-shadow: 0 0 20px rgba(0,200,255,0.5), 0 4px 0 rgba(0,0,0,0.2); }
-    .result-stars { font-size: clamp(46px,11vw,68px); letter-spacing: 8px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }
-    .result-score { font-size: clamp(20px,5vw,28px); color: rgba(255,255,255,0.95); font-weight: 700; }
-    .result-form-name { font-size: clamp(14px,3vw,18px); color: #00CCFF; font-weight: 700; background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.4); border-radius: 12px; padding: 6px 16px; display: inline-block; }
-    .result-message {
-      font-size: clamp(16px,4vw,22px); color: white; font-weight: 700;
-      background: rgba(255,255,255,0.15); border-radius: 16px;
-      padding: 12px 20px; max-width: 400px; width: 100%;
-    }
-    .result-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 360px; }
-    .btn-result {
-      border: none; border-radius: 50px; padding: 18px 32px;
-      font-size: clamp(20px,5vw,26px); font-weight: 900; cursor: pointer;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.2); transition: transform 0.1s, box-shadow 0.1s;
-    }
+    #result { justify-content: center; gap: 16px; text-align: center; transition: background 0.5s; }
+    .result-mascot { display: flex; align-items: center; justify-content: center; position: relative; }
+    .result-mascot.anim-normal { animation: spin-bounce 0.8s ease; }
+    .result-mascot.anim-perfect { animation: tada 0.9s ease; }
+    @keyframes spin-bounce { 0%{transform:scale(0) rotate(-180deg);opacity:0} 60%{transform:scale(1.2) rotate(10deg);opacity:1} 100%{transform:scale(1) rotate(0)} }
+    @keyframes tada { 0%{transform:scale(0.5) rotate(-8deg);opacity:0} 40%{transform:scale(1.25) rotate(4deg);opacity:1} 70%{transform:scale(0.95) rotate(-2deg)} 85%{transform:scale(1.05) rotate(1deg)} 100%{transform:scale(1) rotate(0)} }
+    .result-title { font-size: clamp(32px,8.5vw,56px); font-weight: 900; color: white; text-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+    .result-char-name { font-size: clamp(13px,3vw,17px); font-weight: 800; border-radius: 14px; padding: 6px 18px; display: inline-block; }
+    .result-stars { font-size: clamp(44px,11vw,66px); letter-spacing: 8px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }
+    .result-score { font-size: clamp(18px,4.5vw,26px); color: rgba(255,255,255,0.95); font-weight: 700; }
+    .result-message { font-size: clamp(15px,3.5vw,21px); color: white; font-weight: 700; background: rgba(255,255,255,0.18); border-radius: 14px; padding: 11px 18px; max-width: 400px; width: 100%; }
+    .result-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 340px; }
+    .btn-result { border: none; border-radius: 50px; padding: 16px 28px; font-size: clamp(18px,4.5vw,24px); font-weight: 900; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.2); transition: transform 0.1s,box-shadow 0.1s; }
     .btn-result:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
-    .btn-next { background: linear-gradient(135deg,#00CCFF,#0066FF); color: white; }
-    .btn-retry { background: rgba(255,255,255,0.2); color: white; }
-    .btn-home-r { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); font-size: clamp(16px,4vw,20px); }
+    .btn-next { background: white; }
+    .btn-retry { background: rgba(255,255,255,0.25); color: white; }
+    .btn-home-r { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); font-size: clamp(15px,3.5vw,18px); }
+
+    /* Sparkles on perfect clear */
+    .sparkle-wrap { position: absolute; top: 50%; left: 50%; width: 0; height: 0; pointer-events: none; }
+    .sparkle { position: absolute; font-size: 22px; animation: sparkle-fly 1.2s ease-out forwards; }
+    @keyframes sparkle-fly { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0} }
 
     /* CONFETTI */
     #confetti-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999; }
 
     /* FEEDBACK */
-    .feedback-overlay {
-      position: fixed; top:50%; left:50%;
-      transform: translate(-50%,-50%) scale(0);
-      font-size: 80px; z-index: 1000;
-      transition: transform 0.2s, opacity 0.3s;
-      opacity: 0; pointer-events: none;
-    }
-    .feedback-overlay.show { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
-    .feedback-overlay.hide { transform: translate(-50%,-50%) scale(2); opacity: 0; }
+    .feedback-overlay { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0); font-size:78px; z-index:1000; transition:transform 0.2s,opacity 0.3s; opacity:0; pointer-events:none; }
+    .feedback-overlay.show { transform:translate(-50%,-50%) scale(1.2); opacity:1; }
+    .feedback-overlay.hide { transform:translate(-50%,-50%) scale(2); opacity:0; }
   </style>
 </head>
 <body>
-
 <canvas id="confetti-canvas"></canvas>
 <div class="feedback-overlay" id="feedback"></div>
 
 <!-- HOME -->
 <div class="screen active" id="home">
   <div class="home-mascot" id="home-mascot"></div>
-  <div id="home-form-badge" class="form-badge-home">ゴジラ 第一形態</div>
+  <div class="home-badge" id="home-badge">ゴジラ 第一形態</div>
   <div class="home-title">ゴジラ<br>足し算！</div>
-  <div class="home-subtitle">ゴジラ＆モスラといっしょに<br>足し算をマスターしよう！</div>
+  <div class="home-subtitle">モンスターたちといっしょに<br>足し算をマスターしよう！</div>
   <button class="btn-start" onclick="showScreen('levels')">はじめる ▶</button>
 </div>
 
-<!-- LEVEL SELECT -->
+<!-- LEVELS -->
 <div class="screen" id="levels">
   <div class="levels-header"><h2>🗺️ レベルをえらんでね！</h2></div>
   <div class="total-stars-bar">
     <span>⭐</span>
     <span id="total-stars-display">0 / 30 ほし</span>
-    <span style="margin-left:auto;font-size:22px;" id="total-stars-emoji"></span>
+    <span style="margin-left:auto;font-size:22px" id="total-stars-emoji"></span>
   </div>
   <div class="levels-grid" id="levels-grid"></div>
-  <div class="all-done-badge" id="all-done-badge" style="display:none">
-    🎉 ぜんぶクリア！キミはたしざんマスターだ！🎉
-  </div>
+  <div class="all-done-badge" id="all-done-badge" style="display:none">🎉 ぜんぶクリア！キミはたしざんマスターだ！🎉</div>
 </div>
 
 <!-- GAME -->
@@ -290,8 +131,8 @@
     <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
     <div class="level-badge" id="level-badge">Lv.1</div>
   </div>
-  <div class="question-count" id="question-count">1 / 10もん</div>
-  <div class="form-label" id="form-label">ゴジラ 第一形態</div>
+  <div class="q-count" id="q-count">1 / 10もん</div>
+  <div class="char-label" id="char-label">ゴジラ 第一形態</div>
   <div class="mascot-area" id="game-mascot"></div>
   <div class="speech-bubble" id="speech-bubble">いくつになるかな？</div>
   <div class="equation-box" id="equation-box">? + ? = ?</div>
@@ -301,7 +142,7 @@
 <!-- RESULT -->
 <div class="screen" id="result">
   <div class="result-mascot" id="result-mascot"></div>
-  <div class="result-form-name" id="result-form-name">ゴジラ 第一形態</div>
+  <div class="result-char-name" id="result-char-name">ゴジラ 第一形態</div>
   <div class="result-title" id="result-title">すごい！</div>
   <div class="result-stars" id="result-stars">⭐⭐⭐</div>
   <div class="result-score" id="result-score">10もん せいかい！</div>
@@ -314,681 +155,888 @@
 </div>
 
 <script>
-// ============================================================
-// GODZILLA SVGs — 5 Forms
-// ============================================================
+// ================================================================
+// GODZILLA SVG — 5 forms
+// ================================================================
 function godzillaSVG(w, h, form) {
   form = form || 1;
-
-  // Form 5 = MechaGodzilla
   if (form === 5) {
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="${w}" height="${h}">
-      <defs><filter id="mglow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-      <!-- Tail mechanical -->
-      <path d="M32,90 C16,102 8,90 13,76 C21,72 32,82 32,90Z" fill="#777"/>
-      <rect x="13" y="76" width="9" height="5" rx="1" fill="#999"/>
-      <rect x="17" y="81" width="7" height="5" rx="1" fill="#999"/>
-      <!-- Body panels -->
-      <rect x="30" y="65" width="52" height="38" rx="9" fill="#AAAAAA"/>
-      <rect x="34" y="69" width="20" height="13" rx="3" fill="#888"/>
-      <rect x="58" y="69" width="20" height="13" rx="3" fill="#888"/>
-      <rect x="34" y="86" width="44" height="13" rx="3" fill="#888"/>
-      <!-- Rivet dots -->
-      <circle cx="36" cy="71" r="1.5" fill="#666"/>
-      <circle cx="52" cy="71" r="1.5" fill="#666"/>
-      <circle cx="60" cy="71" r="1.5" fill="#666"/>
-      <circle cx="76" cy="71" r="1.5" fill="#666"/>
-      <!-- Dorsal rockets -->
-      <rect x="35" y="50" width="9" height="23" rx="4.5" fill="#888"/>
-      <rect x="50" y="44" width="9" height="28" rx="4.5" fill="#888"/>
-      <rect x="65" y="48" width="9" height="25" rx="4.5" fill="#888"/>
-      <!-- Rocket glow tips -->
-      <ellipse cx="39.5" cy="50" rx="4.5" ry="3" fill="#00FFFF" filter="url(#mglow)" opacity="0.9"/>
-      <ellipse cx="54.5" cy="44" rx="4.5" ry="3" fill="#00FFFF" filter="url(#mglow)" opacity="0.9"/>
-      <ellipse cx="69.5" cy="48" rx="4.5" ry="3" fill="#00FFFF" filter="url(#mglow)" opacity="0.9"/>
-      <!-- Head rectangular -->
-      <rect x="42" y="36" width="38" height="32" rx="7" fill="#BBBBBB"/>
-      <rect x="46" y="40" width="30" height="6" rx="2" fill="#999"/>
-      <!-- Laser eyes -->
-      <rect x="48" y="50" width="9" height="9" rx="2" fill="#CC0000"/>
-      <rect x="65" y="50" width="9" height="9" rx="2" fill="#CC0000"/>
-      <circle cx="52.5" cy="54.5" r="3.5" fill="#FF4444" filter="url(#mglow)"/>
-      <circle cx="69.5" cy="54.5" r="3.5" fill="#FF4444" filter="url(#mglow)"/>
-      <!-- Laser beam from right eye -->
-      <line x1="80" y1="54" x2="100" y2="48" stroke="#FF0000" stroke-width="2.5" opacity="0.7" filter="url(#mglow)"/>
-      <!-- Mouth grill -->
-      <rect x="48" y="62" width="26" height="5" rx="2" fill="#777"/>
-      <line x1="54" y1="62" x2="54" y2="67" stroke="#999" stroke-width="1.2"/>
-      <line x1="60" y1="62" x2="60" y2="67" stroke="#999" stroke-width="1.2"/>
-      <line x1="66" y1="62" x2="66" y2="67" stroke="#999" stroke-width="1.2"/>
-      <!-- Arms mechanical -->
-      <rect x="22" y="72" width="10" height="20" rx="5" fill="#999"/>
-      <rect x="80" y="72" width="10" height="20" rx="5" fill="#999"/>
-      <!-- Feet -->
-      <rect x="32" y="100" width="22" height="13" rx="5" fill="#999"/>
-      <rect x="58" y="100" width="22" height="13" rx="5" fill="#999"/>
-      <!-- Claws -->
-      <line x1="35" y1="113" x2="32" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
-      <line x1="43" y1="113" x2="43" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
-      <line x1="51" y1="113" x2="54" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
-      <line x1="61" y1="113" x2="58" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
-      <line x1="70" y1="113" x2="70" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
-      <line x1="78" y1="113" x2="81" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
-    </svg>`;
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="'+w+'" height="'+h+'">'
+      +'<defs><filter id="mg"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
+      +'<path d="M32,90 C16,102 8,90 13,76 C21,72 32,82 32,90Z" fill="#777"/>'
+      +'<rect x="30" y="65" width="52" height="38" rx="9" fill="#AAAAAA"/>'
+      +'<rect x="34" y="69" width="20" height="13" rx="3" fill="#888"/>'
+      +'<rect x="58" y="69" width="20" height="13" rx="3" fill="#888"/>'
+      +'<rect x="34" y="86" width="44" height="13" rx="3" fill="#888"/>'
+      +'<rect x="35" y="50" width="9" height="23" rx="4.5" fill="#888"/>'
+      +'<rect x="50" y="44" width="9" height="28" rx="4.5" fill="#888"/>'
+      +'<rect x="65" y="48" width="9" height="25" rx="4.5" fill="#888"/>'
+      +'<ellipse cx="39.5" cy="50" rx="4.5" ry="3" fill="#00FFFF" filter="url(#mg)" opacity="0.9"/>'
+      +'<ellipse cx="54.5" cy="44" rx="4.5" ry="3" fill="#00FFFF" filter="url(#mg)" opacity="0.9"/>'
+      +'<ellipse cx="69.5" cy="48" rx="4.5" ry="3" fill="#00FFFF" filter="url(#mg)" opacity="0.9"/>'
+      +'<rect x="42" y="36" width="38" height="32" rx="7" fill="#BBBBBB"/>'
+      +'<rect x="46" y="40" width="30" height="6" rx="2" fill="#999"/>'
+      +'<rect x="48" y="50" width="9" height="9" rx="2" fill="#CC0000"/>'
+      +'<rect x="65" y="50" width="9" height="9" rx="2" fill="#CC0000"/>'
+      +'<circle cx="52.5" cy="54.5" r="3.5" fill="#FF4444" filter="url(#mg)"/>'
+      +'<circle cx="69.5" cy="54.5" r="3.5" fill="#FF4444" filter="url(#mg)"/>'
+      +'<line x1="80" y1="54" x2="100" y2="48" stroke="#FF0000" stroke-width="2.5" opacity="0.7" filter="url(#mg)"/>'
+      +'<rect x="48" y="62" width="26" height="5" rx="2" fill="#777"/>'
+      +'<line x1="54" y1="62" x2="54" y2="67" stroke="#999" stroke-width="1.2"/>'
+      +'<line x1="60" y1="62" x2="60" y2="67" stroke="#999" stroke-width="1.2"/>'
+      +'<line x1="66" y1="62" x2="66" y2="67" stroke="#999" stroke-width="1.2"/>'
+      +'<rect x="22" y="72" width="10" height="20" rx="5" fill="#999"/>'
+      +'<rect x="80" y="72" width="10" height="20" rx="5" fill="#999"/>'
+      +'<rect x="32" y="100" width="22" height="13" rx="5" fill="#999"/>'
+      +'<rect x="58" y="100" width="22" height="13" rx="5" fill="#999"/>'
+      +'<line x1="35" y1="113" x2="32" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>'
+      +'<line x1="43" y1="113" x2="43" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>'
+      +'<line x1="51" y1="113" x2="54" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>'
+      +'<line x1="61" y1="113" x2="58" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>'
+      +'<line x1="70" y1="113" x2="70" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>'
+      +'<line x1="78" y1="113" x2="81" y2="119" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>'
+      +'</svg>';
   }
-
-  // Forms 1-4: biological variants
-  var C = [null,
-    { body:'#43a368', dark:'#2e7d4f', spine:'#1a5c38', pupil:'#111', eyebrow:false, extraSpines:false, glowColor:null, fire:false },
-    { body:'#1e6b35', dark:'#0a3018', spine:'#061408', pupil:'#111', eyebrow:true,  extraSpines:true,  glowColor:null, fire:false },
-    { body:'#1a3a9c', dark:'#0d1f6c', spine:'#00CCFF', pupil:'#00CCFF', eyebrow:false, extraSpines:false, glowColor:'#00CCFF', fire:false },
-    { body:'#CC3300', dark:'#881100', spine:'#FF6600', pupil:'#FFD700', eyebrow:false, extraSpines:false, glowColor:null, fire:true },
+  var C=[null,
+    {b:'#43a368',d:'#2e7d4f',s:'#1a5c38',p:'#111',eb:false,ex:false,gl:null,fi:false},
+    {b:'#1e6b35',d:'#0a3018',s:'#061408',p:'#111',eb:true, ex:true, gl:null,fi:false},
+    {b:'#1a3a9c',d:'#0d1f6c',s:'#00CCFF',p:'#00CCFF',eb:false,ex:false,gl:'#00CCFF',fi:false},
+    {b:'#CC3300',d:'#881100',s:'#FF6600',p:'#FFD700',eb:false,ex:false,gl:null,fi:true},
   ][form];
-
-  var spineTop = C.extraSpines ? 28 : 22;
-  var gf = C.glowColor ? ('filter="url(#bglow)"') : '';
-  var glowDef = C.glowColor ? ('<defs><filter id="bglow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>') : '';
-
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="' + w + '" height="' + h + '">'
-    + glowDef
-    // fire aura
-    + (C.fire ? '<ellipse cx="58" cy="82" rx="32" ry="29" fill="#FF4400" opacity="0.2"/><ellipse cx="58" cy="78" rx="26" ry="24" fill="#FF8800" opacity="0.18"/>' : '')
-    // tail
-    + '<path d="M33,90 C18,102 10,90 14,76 C22,72 33,82 33,90Z" fill="' + C.dark + '"/>'
-    // body
-    + '<ellipse cx="58" cy="86" rx="27" ry="24" fill="' + C.body + '"/>'
-    // extra spines (form 2)
-    + (C.extraSpines ? '<polygon points="26,67 22,' + (67-spineTop-4) + ' 36,67" fill="' + C.spine + '"/><polygon points="82,64 80,' + (64-spineTop-2) + ' 90,64" fill="' + C.spine + '"/>' : '')
-    // main 3 spines
-    + '<polygon points="38,64 34,' + (64-spineTop) + ' 46,64" fill="' + C.spine + '" ' + gf + '/>'
-    + '<polygon points="54,59 51,' + (59-spineTop-2) + ' 63,59" fill="' + C.spine + '" ' + gf + '/>'
-    + '<polygon points="71,62 69,' + (62-spineTop) + ' 79,62" fill="' + C.spine + '" ' + gf + '/>'
-    // fire flame tips
-    + (C.fire ? '<polygon points="38,' + (64-spineTop) + ' 33,' + (64-spineTop-10) + ' 43,' + (64-spineTop-10) + '" fill="#FFD700" opacity="0.9"/><polygon points="54,' + (59-spineTop-2) + ' 49,' + (59-spineTop-12) + ' 59,' + (59-spineTop-12) + '" fill="#FFD700" opacity="0.9"/><polygon points="71,' + (62-spineTop) + ' 66,' + (62-spineTop-10) + ' 76,' + (62-spineTop-10) + '" fill="#FFD700" opacity="0.9"/>' : '')
-    // blue glow halos
-    + (C.glowColor ? '<circle cx="40" cy="' + (64-spineTop) + '" r="5" fill="' + C.glowColor + '" opacity="0.4"/><circle cx="57" cy="' + (59-spineTop-2) + '" r="5" fill="' + C.glowColor + '" opacity="0.4"/><circle cx="74" cy="' + (62-spineTop) + '" r="5" fill="' + C.glowColor + '" opacity="0.4"/>' : '')
-    // head
-    + '<ellipse cx="64" cy="54" rx="22" ry="20" fill="' + C.body + '"/>'
-    // eyebrows for form 2
-    + (C.eyebrow ? '<line x1="47" y1="40" x2="60" y2="43" stroke="' + C.dark + '" stroke-width="3.5" stroke-linecap="round"/><line x1="69" y1="43" x2="82" y2="40" stroke="' + C.dark + '" stroke-width="3.5" stroke-linecap="round"/>' : '')
-    // eye whites
-    + '<circle cx="54" cy="47" r="7.5" fill="white"/><circle cx="74" cy="47" r="7.5" fill="white"/>'
-    // pupils
-    + '<circle cx="55" cy="48" r="4.5" fill="' + C.pupil + '"/><circle cx="75" cy="48" r="4.5" fill="' + C.pupil + '"/>'
-    // eye shine (not for glowing eyes)
-    + (C.glowColor ? '<circle cx="54" cy="47" r="9" fill="' + C.glowColor + '" opacity="0.25"/><circle cx="74" cy="47" r="9" fill="' + C.glowColor + '" opacity="0.25"/>' : '<circle cx="57" cy="45" r="1.8" fill="white"/><circle cx="77" cy="45" r="1.8" fill="white"/>')
-    // nostrils
-    + '<ellipse cx="60" cy="57" rx="2" ry="1.5" fill="' + C.dark + '"/><ellipse cx="68" cy="57" rx="2" ry="1.5" fill="' + C.dark + '"/>'
-    // smile
-    + '<path d="M50,64 Q64,75 78,64" stroke="' + C.dark + '" stroke-width="3" fill="none" stroke-linecap="round"/>'
-    // teeth
-    + '<line x1="56" y1="65" x2="56" y2="70" stroke="white" stroke-width="3" stroke-linecap="round"/>'
-    + '<line x1="64" y1="68" x2="64" y2="73" stroke="white" stroke-width="3" stroke-linecap="round"/>'
-    + '<line x1="72" y1="65" x2="72" y2="70" stroke="white" stroke-width="3" stroke-linecap="round"/>'
-    // arms
-    + '<path d="M33,80 Q26,82 24,88 Q28,94 34,90" fill="' + C.dark + '"/>'
-    + '<path d="M83,80 Q90,82 92,88 Q88,94 82,90" fill="' + C.dark + '"/>'
-    // feet
-    + '<ellipse cx="44" cy="107" rx="14" ry="9" fill="' + C.dark + '"/>'
-    + '<ellipse cx="72" cy="107" rx="14" ry="9" fill="' + C.dark + '"/>'
-    // claws
-    + '<line x1="33" y1="111" x2="30" y2="116" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
-    + '<line x1="43" y1="114" x2="43" y2="119" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
-    + '<line x1="53" y1="111" x2="56" y2="116" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
-    + '<line x1="61" y1="111" x2="58" y2="116" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
-    + '<line x1="71" y1="114" x2="71" y2="119" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
-    + '<line x1="81" y1="111" x2="84" y2="116" stroke="' + C.spine + '" stroke-width="2.5" stroke-linecap="round"/>'
-    + '</svg>';
+  var st=C.ex?32:22;
+  var gf=C.gl?'filter="url(#bg)"':'';
+  var gd=C.gl?'<defs><filter id="bg"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>':'';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="'+w+'" height="'+h+'">'
+    +gd
+    +(C.fi?'<ellipse cx="58" cy="82" rx="32" ry="29" fill="#FF4400" opacity="0.2"/><ellipse cx="58" cy="78" rx="26" ry="24" fill="#FF8800" opacity="0.18"/>':'')
+    +'<path d="M33,90 C18,102 10,90 14,76 C22,72 33,82 33,90Z" fill="'+C.d+'"/>'
+    +'<ellipse cx="58" cy="86" rx="27" ry="24" fill="'+C.b+'"/>'
+    +(C.ex?'<polygon points="26,67 22,'+(67-st-4)+' 36,67" fill="'+C.s+'"/><polygon points="82,64 80,'+(64-st-2)+' 90,64" fill="'+C.s+'"/>':'')
+    +'<polygon points="38,64 34,'+(64-st)+' 46,64" fill="'+C.s+'" '+gf+'/>'
+    +'<polygon points="54,59 51,'+(59-st-2)+' 63,59" fill="'+C.s+'" '+gf+'/>'
+    +'<polygon points="71,62 69,'+(62-st)+' 79,62" fill="'+C.s+'" '+gf+'/>'
+    +(C.fi?'<polygon points="38,'+(64-st)+' 33,'+(64-st-10)+' 43,'+(64-st-10)+'" fill="#FFD700" opacity="0.9"/><polygon points="54,'+(59-st-2)+' 49,'+(59-st-12)+' 59,'+(59-st-12)+'" fill="#FFD700" opacity="0.9"/><polygon points="71,'+(62-st)+' 66,'+(62-st-10)+' 76,'+(62-st-10)+'" fill="#FFD700" opacity="0.9"/>':'')
+    +(C.gl?'<circle cx="40" cy="'+(64-st)+'" r="5" fill="'+C.gl+'" opacity="0.4"/><circle cx="57" cy="'+(59-st-2)+'" r="5" fill="'+C.gl+'" opacity="0.4"/><circle cx="74" cy="'+(62-st)+'" r="5" fill="'+C.gl+'" opacity="0.4"/>':'')
+    +'<ellipse cx="64" cy="54" rx="22" ry="20" fill="'+C.b+'"/>'
+    +(C.eb?'<line x1="47" y1="40" x2="60" y2="43" stroke="'+C.d+'" stroke-width="3.5" stroke-linecap="round"/><line x1="69" y1="43" x2="82" y2="40" stroke="'+C.d+'" stroke-width="3.5" stroke-linecap="round"/>':'')
+    +'<circle cx="54" cy="47" r="7.5" fill="white"/><circle cx="74" cy="47" r="7.5" fill="white"/>'
+    +'<circle cx="55" cy="48" r="4.5" fill="'+C.p+'"/><circle cx="75" cy="48" r="4.5" fill="'+C.p+'"/>'
+    +(C.gl?'<circle cx="54" cy="47" r="9" fill="'+C.gl+'" opacity="0.25"/><circle cx="74" cy="47" r="9" fill="'+C.gl+'" opacity="0.25"/>':'<circle cx="57" cy="45" r="1.8" fill="white"/><circle cx="77" cy="45" r="1.8" fill="white"/>')
+    +'<ellipse cx="60" cy="57" rx="2" ry="1.5" fill="'+C.d+'"/><ellipse cx="68" cy="57" rx="2" ry="1.5" fill="'+C.d+'"/>'
+    +'<path d="M50,64 Q64,75 78,64" stroke="'+C.d+'" stroke-width="3" fill="none" stroke-linecap="round"/>'
+    +'<line x1="56" y1="65" x2="56" y2="70" stroke="white" stroke-width="3" stroke-linecap="round"/>'
+    +'<line x1="64" y1="68" x2="64" y2="73" stroke="white" stroke-width="3" stroke-linecap="round"/>'
+    +'<line x1="72" y1="65" x2="72" y2="70" stroke="white" stroke-width="3" stroke-linecap="round"/>'
+    +'<path d="M33,80 Q26,82 24,88 Q28,94 34,90" fill="'+C.d+'"/>'
+    +'<path d="M83,80 Q90,82 92,88 Q88,94 82,90" fill="'+C.d+'"/>'
+    +'<ellipse cx="44" cy="107" rx="14" ry="9" fill="'+C.d+'"/>'
+    +'<ellipse cx="72" cy="107" rx="14" ry="9" fill="'+C.d+'"/>'
+    +'<line x1="33" y1="111" x2="30" y2="116" stroke="'+C.s+'" stroke-width="2.5" stroke-linecap="round"/>'
+    +'<line x1="43" y1="114" x2="43" y2="119" stroke="'+C.s+'" stroke-width="2.5" stroke-linecap="round"/>'
+    +'<line x1="53" y1="111" x2="56" y2="116" stroke="'+C.s+'" stroke-width="2.5" stroke-linecap="round"/>'
+    +'<line x1="61" y1="111" x2="58" y2="116" stroke="'+C.s+'" stroke-width="2.5" stroke-linecap="round"/>'
+    +'<line x1="71" y1="114" x2="71" y2="119" stroke="'+C.s+'" stroke-width="2.5" stroke-linecap="round"/>'
+    +'<line x1="81" y1="111" x2="84" y2="116" stroke="'+C.s+'" stroke-width="2.5" stroke-linecap="round"/>'
+    +'</svg>';
 }
 
-// ============================================================
-// MOTHRA SVGs — 4 Forms
-// ============================================================
+// ================================================================
+// HEDORAH (ヘドラ) — toxic pollution monster
+// ================================================================
+function hedorahSVG(w, h) {
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 115" width="'+w+'" height="'+h+'">'
+    // slime pool
+    +'<ellipse cx="60" cy="108" rx="40" ry="8" fill="#3A5A1A" opacity="0.5"/>'
+    // drip legs
+    +'<path d="M32,90 Q28,100 33,110 Q38,105 35,95Z" fill="#4A6A1A"/>'
+    +'<path d="M55,95 Q52,106 57,112 Q62,106 58,96Z" fill="#4A6A1A"/>'
+    +'<path d="M80,92 Q82,104 77,110 Q72,104 76,93Z" fill="#4A6A1A"/>'
+    // body blob
+    +'<path d="M18,75 Q10,55 18,38 Q28,22 45,18 Q62,14 78,20 Q96,26 104,44 Q112,60 106,78 Q98,96 78,100 Q60,104 40,96 Q22,90 18,75Z" fill="#5A7A2A"/>'
+    // toxic spots on body
+    +'<circle cx="35" cy="55" r="8" fill="#4A6A1A" opacity="0.6"/>'
+    +'<circle cx="72" cy="42" r="10" fill="#4A6A1A" opacity="0.5"/>'
+    +'<circle cx="88" cy="68" r="7" fill="#4A6A1A" opacity="0.6"/>'
+    +'<circle cx="48" cy="78" r="9" fill="#4A6A1A" opacity="0.5"/>'
+    // neon bubble highlights
+    +'<circle cx="28" cy="65" r="5" fill="#AAFF00" opacity="0.55"/>'
+    +'<circle cx="82" cy="52" r="4" fill="#AAFF00" opacity="0.5"/>'
+    +'<circle cx="60" cy="32" r="3.5" fill="#CCFF44" opacity="0.6"/>'
+    // BIG left compound eye
+    +'<circle cx="42" cy="38" r="20" fill="#1A1A0A"/>'
+    +'<circle cx="42" cy="38" r="15" fill="#AAFF00"/>'
+    +'<circle cx="42" cy="38" r="10" fill="#66CC00"/>'
+    +'<circle cx="42" cy="38" r="5" fill="#1A1A0A"/>'
+    // facets on big eye
+    +'<circle cx="35" cy="30" r="4" fill="#BBFF22" opacity="0.5"/>'
+    +'<circle cx="50" cy="30" r="4" fill="#BBFF22" opacity="0.5"/>'
+    +'<circle cx="32" cy="42" r="3.5" fill="#BBFF22" opacity="0.5"/>'
+    +'<circle cx="54" cy="44" r="3.5" fill="#BBFF22" opacity="0.5"/>'
+    // small right eye (alien, mismatched)
+    +'<ellipse cx="76" cy="32" rx="13" ry="10" fill="#1A1A0A"/>'
+    +'<ellipse cx="76" cy="32" rx="9" ry="7" fill="#AAFF00"/>'
+    +'<ellipse cx="76" cy="32" rx="5" ry="4" fill="#1A1A0A"/>'
+    +'<ellipse cx="78" cy="30" rx="2" ry="1.5" fill="#DDFF88" opacity="0.6"/>'
+    // toxic drips from top
+    +'<path d="M48,18 Q46,10 50,6 Q54,10 52,18Z" fill="#8BC34A" opacity="0.8"/>'
+    +'<path d="M68,16 Q66,7 70,3 Q74,7 72,16Z" fill="#8BC34A" opacity="0.7"/>'
+    +'</svg>';
+}
+
+// ================================================================
+// EBIRAH (エビラ) — giant sea lobster
+// ================================================================
+function ebirahSVG(w, h) {
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 120" width="'+w+'" height="'+h+'">'
+    // shadow
+    +'<ellipse cx="70" cy="116" rx="38" ry="5" fill="#AA2200" opacity="0.25"/>'
+    // tail fan
+    +'<ellipse cx="70" cy="104" rx="28" ry="12" fill="#CC3300"/>'
+    +'<path d="M42,100 Q30,108 34,116 Q44,112 48,104Z" fill="#BB2200"/>'
+    +'<path d="M98,100 Q110,108 106,116 Q96,112 92,104Z" fill="#BB2200"/>'
+    +'<path d="M55,102 Q50,112 54,118 Q62,114 60,104Z" fill="#DD4400"/>'
+    +'<path d="M85,102 Q90,112 86,118 Q78,114 80,104Z" fill="#DD4400"/>'
+    // body segments
+    +'<ellipse cx="70" cy="86" rx="26" ry="16" fill="#CC3300"/>'
+    +'<line x1="44" y1="86" x2="96" y2="86" stroke="#BB2200" stroke-width="2"/>'
+    +'<ellipse cx="70" cy="72" rx="24" ry="14" fill="#DD4422"/>'
+    +'<line x1="46" y1="72" x2="94" y2="72" stroke="#CC3300" stroke-width="2"/>'
+    // carapace (main shell)
+    +'<ellipse cx="70" cy="55" rx="28" ry="20" fill="#EE4433"/>'
+    // shell ridges
+    +'<path d="M42,55 Q70,45 98,55" fill="none" stroke="#DD3322" stroke-width="2"/>'
+    +'<path d="M45,60 Q70,52 95,60" fill="none" stroke="#DD3322" stroke-width="1.5"/>'
+    // left BIG CLAW
+    +'<line x1="50" y1="52" x2="22" y2="32" stroke="#CC3300" stroke-width="8" stroke-linecap="round"/>'
+    +'<path d="M10,18 Q4,8 14,8 Q20,14 22,22 Q26,26 22,32Z" fill="#CC3300"/>'
+    +'<path d="M24,14 Q32,6 36,14 Q32,22 24,24Z" fill="#DD4422"/>'
+    +'<path d="M10,24 Q4,32 10,36 Q18,34 22,28Z" fill="#DD4422"/>'
+    // right BIG CLAW
+    +'<line x1="90" y1="52" x2="118" y2="32" stroke="#CC3300" stroke-width="8" stroke-linecap="round"/>'
+    +'<path d="M130,18 Q136,8 126,8 Q120,14 118,22 Q114,26 118,32Z" fill="#CC3300"/>'
+    +'<path d="M116,14 Q108,6 104,14 Q108,22 116,24Z" fill="#DD4422"/>'
+    +'<path d="M130,24 Q136,32 130,36 Q122,34 118,28Z" fill="#DD4422"/>'
+    // walking legs (small pairs)
+    +'<line x1="52" y1="65" x2="38" y2="78" stroke="#BB2200" stroke-width="3" stroke-linecap="round"/>'
+    +'<line x1="57" y1="68" x2="44" y2="84" stroke="#BB2200" stroke-width="3" stroke-linecap="round"/>'
+    +'<line x1="88" y1="65" x2="102" y2="78" stroke="#BB2200" stroke-width="3" stroke-linecap="round"/>'
+    +'<line x1="83" y1="68" x2="96" y2="84" stroke="#BB2200" stroke-width="3" stroke-linecap="round"/>'
+    // HEAD
+    +'<ellipse cx="70" cy="36" rx="22" ry="18" fill="#EE4433"/>'
+    // eye stalks
+    +'<line x1="60" y1="22" x2="52" y2="10" stroke="#CC3300" stroke-width="5" stroke-linecap="round"/>'
+    +'<line x1="80" y1="22" x2="88" y2="10" stroke="#CC3300" stroke-width="5" stroke-linecap="round"/>'
+    // eyes (round, black with shine)
+    +'<circle cx="52" cy="9" r="8" fill="#1A0A00"/>'
+    +'<circle cx="88" cy="9" r="8" fill="#1A0A00"/>'
+    +'<circle cx="52" cy="9" r="4.5" fill="#FF6600" opacity="0.7"/>'
+    +'<circle cx="88" cy="9" r="4.5" fill="#FF6600" opacity="0.7"/>'
+    +'<circle cx="54" cy="7" r="2" fill="white" opacity="0.8"/>'
+    +'<circle cx="90" cy="7" r="2" fill="white" opacity="0.8"/>'
+    // long antennae
+    +'<path d="M60,20 Q40,12 16,4" fill="none" stroke="#BB2200" stroke-width="2.5" stroke-linecap="round"/>'
+    +'<path d="M80,20 Q100,12 124,4" fill="none" stroke="#BB2200" stroke-width="2.5" stroke-linecap="round"/>'
+    // mouth
+    +'<path d="M58,44 Q70,52 82,44" fill="none" stroke="#BB2200" stroke-width="3" stroke-linecap="round"/>'
+    +'</svg>';
+}
+
+// ================================================================
+// KAMACURAS (カマキラス) — giant praying mantis
+// ================================================================
+function kamacurasSVG(w, h) {
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" width="'+w+'" height="'+h+'">'
+    // shadow
+    +'<ellipse cx="60" cy="136" rx="30" ry="5" fill="#1A4A1A" opacity="0.3"/>'
+    // abdomen (segmented, pointed)
+    +'<path d="M46,130 Q38,118 42,104 Q52,96 68,96 Q84,96 86,108 Q88,120 78,130 Q70,136 60,136 Q52,136 46,130Z" fill="#2D6A2D"/>'
+    +'<ellipse cx="64" cy="106" rx="20" ry="8" fill="#1A4A1A" opacity="0.5"/>'
+    +'<ellipse cx="63" cy="118" rx="18" ry="7" fill="#1A4A1A" opacity="0.5"/>'
+    +'<path d="M56,132 Q60,140 64,132" fill="#1A4A1A"/>'
+    // thorax
+    +'<ellipse cx="60" cy="86" rx="18" ry="22" fill="#3A8A3A"/>'
+    // walking legs (3 pairs)
+    +'<line x1="44" y1="80" x2="22" y2="96" stroke="#2D6A2D" stroke-width="4" stroke-linecap="round"/>'
+    +'<line x1="42" y1="90" x2="18" y2="102" stroke="#2D6A2D" stroke-width="3.5" stroke-linecap="round"/>'
+    +'<line x1="44" y1="100" x2="24" y2="116" stroke="#2D6A2D" stroke-width="3" stroke-linecap="round"/>'
+    +'<line x1="76" y1="80" x2="98" y2="96" stroke="#2D6A2D" stroke-width="4" stroke-linecap="round"/>'
+    +'<line x1="78" y1="90" x2="102" y2="102" stroke="#2D6A2D" stroke-width="3.5" stroke-linecap="round"/>'
+    +'<line x1="76" y1="100" x2="96" y2="116" stroke="#2D6A2D" stroke-width="3" stroke-linecap="round"/>'
+    // LEFT SCYTHE ARM — signature feature
+    +'<line x1="46" y1="68" x2="12" y2="46" stroke="#1A4A1A" stroke-width="7" stroke-linecap="round"/>'
+    +'<path d="M4,32 Q-2,18 8,16 Q16,18 18,30 Q18,40 12,46Z" fill="#1A4A1A"/>'
+    +'<path d="M14,28 Q22,18 26,26 Q22,38 14,40Z" fill="#2D6A2D"/>'
+    // RIGHT SCYTHE ARM
+    +'<line x1="74" y1="68" x2="108" y2="46" stroke="#1A4A1A" stroke-width="7" stroke-linecap="round"/>'
+    +'<path d="M116,32 Q122,18 112,16 Q104,18 102,30 Q102,40 108,46Z" fill="#1A4A1A"/>'
+    +'<path d="M106,28 Q98,18 94,26 Q98,38 106,40Z" fill="#2D6A2D"/>'
+    // NECK
+    +'<rect x="54" y="42" width="12" height="28" rx="6" fill="#2D6A2D"/>'
+    // HEAD — triangular
+    +'<polygon points="60,12 34,50 86,50" fill="#3A8A3A"/>'
+    // forehead ridge
+    +'<polygon points="60,16 48,38 72,38" fill="#2D6A2D" opacity="0.5"/>'
+    // COMPOUND EYES — large, prominent
+    +'<ellipse cx="42" cy="38" rx="11" ry="13" fill="#880088"/>'
+    +'<ellipse cx="78" cy="38" rx="11" ry="13" fill="#880088"/>'
+    +'<ellipse cx="42" cy="38" rx="7" ry="9" fill="#CC00CC"/>'
+    +'<ellipse cx="78" cy="38" rx="7" ry="9" fill="#CC00CC"/>'
+    +'<ellipse cx="42" cy="37" rx="3.5" ry="4.5" fill="#FF44FF"/>'
+    +'<ellipse cx="78" cy="37" rx="3.5" ry="4.5" fill="#FF44FF"/>'
+    +'<ellipse cx="43" cy="35" rx="1.5" ry="2" fill="white" opacity="0.7"/>'
+    +'<ellipse cx="79" cy="35" rx="1.5" ry="2" fill="white" opacity="0.7"/>'
+    // antennae
+    +'<path d="M52,14 Q40,4 28,0" fill="none" stroke="#2D6A2D" stroke-width="2.5" stroke-linecap="round"/>'
+    +'<path d="M68,14 Q80,4 92,0" fill="none" stroke="#2D6A2D" stroke-width="2.5" stroke-linecap="round"/>'
+    // mandibles
+    +'<path d="M50,48 Q42,55 46,60" fill="none" stroke="#1A4A1A" stroke-width="3" stroke-linecap="round"/>'
+    +'<path d="M70,48 Q78,55 74,60" fill="none" stroke="#1A4A1A" stroke-width="3" stroke-linecap="round"/>'
+    +'</svg>';
+}
+
+// ================================================================
+// MOTHRA (モスラ) — 4 forms
+// ================================================================
 function mothraSVG(w, h, form) {
   form = form || 1;
-  var C = [null,
-    { wu:'#E8A020', wd:'#D4901A', body:'#F0DCA0', ep1:'#1a1a1a', ep2:'#FFD700', cheek:'#FFB3C1', extra:'' },
-    { wu:'#0088CC', wd:'#005588', body:'#AAD8F0', ep1:'#003366', ep2:'#00FFFF', cheek:'#88CCFF', extra:'aqua' },
-    { wu:'#FF3366', wd:'#AA0044', body:'#FFEEAA', ep1:'#1a1a1a', ep2:'#FFD700', cheek:'#FFB3C1', extra:'rainbow' },
-    { wu:'#C8F0FF', wd:'#88CCEE', body:'#FFFFFF', ep1:'#336699', ep2:'#AADDFF', cheek:'#CCF0FF', extra:'ice' },
+  var C=[null,
+    {wu:'#E8A020',wd:'#D4901A',body:'#F0DCA0',ep1:'#1a1a1a',ep2:'#FFD700',cheek:'#FFB3C1',ex:''},
+    {wu:'#0088CC',wd:'#005588',body:'#AAD8F0',ep1:'#003366',ep2:'#00FFFF',cheek:'#88CCFF',ex:'aqua'},
+    {wu:'#FF3366',wd:'#AA0044',body:'#FFEEAA',ep1:'#1a1a1a',ep2:'#FFD700',cheek:'#FFB3C1',ex:'rainbow'},
+    {wu:'#C8F0FF',wd:'#88CCEE',body:'#FFFFFF',ep1:'#336699',ep2:'#AADDFF',cheek:'#CCF0FF',ex:'ice'},
   ][form];
-
-  var wuL = C.extra === 'rainbow' ? 'url(#rwl)' : C.wu;
-  var wuR = C.extra === 'rainbow' ? 'url(#rwr)' : C.wu;
-
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 115" width="' + w + '" height="' + h + '">'
-    + (C.extra === 'rainbow' ? '<defs><linearGradient id="rwl" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FF3366"/><stop offset="50%" style="stop-color:#FFEE00"/><stop offset="100%" style="stop-color:#3366FF"/></linearGradient><linearGradient id="rwr" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#3366FF"/><stop offset="50%" style="stop-color:#FFEE00"/><stop offset="100%" style="stop-color:#FF3366"/></linearGradient></defs>' : '')
-    // upper wings
-    + '<path d="M65,45 Q42,20 15,30 Q10,50 25,62 Q45,70 65,58Z" fill="' + wuL + '"/>'
-    + '<path d="M65,45 Q88,20 115,30 Q120,50 105,62 Q85,70 65,58Z" fill="' + wuR + '"/>'
-    // wing shading
-    + '<path d="M65,47 Q45,28 22,35 Q20,50 32,58 Q50,65 65,56Z" fill="' + C.wd + '" opacity="0.5"/>'
-    + '<path d="M65,47 Q85,28 108,35 Q110,50 98,58 Q80,65 65,56Z" fill="' + C.wd + '" opacity="0.5"/>'
-    // eye spots
-    + '<circle cx="28" cy="42" r="8" fill="' + C.ep1 + '"/><circle cx="28" cy="42" r="5" fill="' + C.ep2 + '"/><circle cx="28" cy="42" r="2.5" fill="' + C.ep1 + '"/>'
-    + '<circle cx="102" cy="42" r="8" fill="' + C.ep1 + '"/><circle cx="102" cy="42" r="5" fill="' + C.ep2 + '"/><circle cx="102" cy="42" r="2.5" fill="' + C.ep1 + '"/>'
-    // lower wings
-    + '<path d="M65,58 Q40,60 28,75 Q35,90 50,85 Q62,78 65,65Z" fill="' + C.wd + '"/>'
-    + '<path d="M65,58 Q90,60 102,75 Q95,90 80,85 Q68,78 65,65Z" fill="' + C.wd + '"/>'
-    // ice crystals
-    + (C.extra === 'ice' ? '<polygon points="18,38 14,46 22,46" fill="#E8F8FF" opacity="0.9"/><polygon points="112,38 108,46 116,46" fill="#E8F8FF" opacity="0.9"/><polygon points="30,70 26,78 34,78" fill="#E8F8FF" opacity="0.9"/><polygon points="100,70 96,78 104,78" fill="#E8F8FF" opacity="0.9"/><polygon points="14,55 11,61 17,61" fill="#FFFFFF" opacity="0.7"/>' : '')
-    // aqua bubbles
-    + (C.extra === 'aqua' ? '<circle cx="18" cy="42" r="4" fill="none" stroke="#00CCFF" stroke-width="1.5" opacity="0.8"/><circle cx="112" cy="42" r="4" fill="none" stroke="#00CCFF" stroke-width="1.5" opacity="0.8"/><circle cx="22" cy="56" r="3" fill="none" stroke="#00CCFF" stroke-width="1.5" opacity="0.7"/><circle cx="108" cy="56" r="3" fill="none" stroke="#00CCFF" stroke-width="1.5" opacity="0.7"/>' : '')
-    // body
-    + '<ellipse cx="65" cy="60" rx="14" ry="28" fill="' + C.body + '"/>'
-    + '<ellipse cx="65" cy="50" rx="12" ry="7" fill="' + C.wd + '" opacity="0.5"/>'
-    + '<ellipse cx="65" cy="62" rx="12" ry="7" fill="' + C.wd + '" opacity="0.5"/>'
-    + '<ellipse cx="65" cy="74" rx="10" ry="5" fill="' + C.wd + '" opacity="0.5"/>'
-    // head
-    + '<circle cx="65" cy="35" r="16" fill="' + C.body + '"/>'
-    // cheeks
-    + '<circle cx="56" cy="39" r="6" fill="' + C.cheek + '" opacity="0.55"/>'
-    + '<circle cx="74" cy="39" r="6" fill="' + C.cheek + '" opacity="0.55"/>'
-    // eyes
-    + '<circle cx="59" cy="30" r="6" fill="white"/><circle cx="71" cy="30" r="6" fill="white"/>'
-    + '<circle cx="59.5" cy="30.5" r="3.5" fill="#1a0a00"/><circle cx="71.5" cy="30.5" r="3.5" fill="#1a0a00"/>'
-    + '<circle cx="61" cy="29" r="1.5" fill="white"/><circle cx="73" cy="29" r="1.5" fill="white"/>'
-    // smile
-    + '<path d="M59,39 Q65,45 71,39" fill="none" stroke="#a06820" stroke-width="2.5" stroke-linecap="round"/>'
-    // antennae
-    + '<path d="M60,21 Q52,11 44,7" fill="none" stroke="#8B6914" stroke-width="3.5" stroke-linecap="round"/>'
-    + '<path d="M70,21 Q78,11 86,7" fill="none" stroke="#8B6914" stroke-width="3.5" stroke-linecap="round"/>'
-    + '<circle cx="44" cy="7" r="5" fill="' + C.wu + '"/>'
-    + '<circle cx="86" cy="7" r="5" fill="' + C.wu + '"/>'
-    + '</svg>';
+  var wuL=C.ex==='rainbow'?'url(#rwl)':C.wu;
+  var wuR=C.ex==='rainbow'?'url(#rwr)':C.wu;
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 115" width="'+w+'" height="'+h+'">'
+    +(C.ex==='rainbow'?'<defs><linearGradient id="rwl" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FF3366"/><stop offset="50%" style="stop-color:#FFEE00"/><stop offset="100%" style="stop-color:#3366FF"/></linearGradient><linearGradient id="rwr" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#3366FF"/><stop offset="50%" style="stop-color:#FFEE00"/><stop offset="100%" style="stop-color:#FF3366"/></linearGradient></defs>':'')
+    +'<path d="M70,45 Q46,20 16,30 Q10,52 26,64 Q48,72 70,58Z" fill="'+wuL+'"/>'
+    +'<path d="M70,45 Q94,20 124,30 Q130,52 114,64 Q92,72 70,58Z" fill="'+wuR+'"/>'
+    +'<path d="M70,47 Q48,28 24,36 Q22,52 34,60 Q52,67 70,56Z" fill="'+C.wd+'" opacity="0.5"/>'
+    +'<path d="M70,47 Q92,28 116,36 Q118,52 106,60 Q88,67 70,56Z" fill="'+C.wd+'" opacity="0.5"/>'
+    +'<circle cx="28" cy="44" r="9" fill="'+C.ep1+'"/><circle cx="28" cy="44" r="6" fill="'+C.ep2+'"/><circle cx="28" cy="44" r="3" fill="'+C.ep1+'"/>'
+    +'<circle cx="112" cy="44" r="9" fill="'+C.ep1+'"/><circle cx="112" cy="44" r="6" fill="'+C.ep2+'"/><circle cx="112" cy="44" r="3" fill="'+C.ep1+'"/>'
+    +'<path d="M70,58 Q44,60 30,76 Q37,92 54,87 Q66,80 70,66Z" fill="'+C.wd+'"/>'
+    +'<path d="M70,58 Q96,60 110,76 Q103,92 86,87 Q74,80 70,66Z" fill="'+C.wd+'"/>'
+    +(C.ex==='ice'?'<polygon points="18,40 14,48 22,48" fill="#E8F8FF" opacity="0.9"/><polygon points="122,40 118,48 126,48" fill="#E8F8FF" opacity="0.9"/><polygon points="32,72 28,80 36,80" fill="#E8F8FF" opacity="0.9"/><polygon points="108,72 104,80 112,80" fill="#E8F8FF" opacity="0.9"/>':'')
+    +(C.ex==='aqua'?'<circle cx="18" cy="44" r="4.5" fill="none" stroke="#00CCFF" stroke-width="1.5" opacity="0.8"/><circle cx="122" cy="44" r="4.5" fill="none" stroke="#00CCFF" stroke-width="1.5" opacity="0.8"/><circle cx="24" cy="58" r="3" fill="none" stroke="#00CCFF" stroke-width="1.5" opacity="0.7"/>':'')
+    +'<ellipse cx="70" cy="60" rx="14" ry="28" fill="'+C.body+'"/>'
+    +'<ellipse cx="70" cy="50" rx="12" ry="7" fill="'+C.wd+'" opacity="0.5"/>'
+    +'<ellipse cx="70" cy="62" rx="12" ry="7" fill="'+C.wd+'" opacity="0.5"/>'
+    +'<ellipse cx="70" cy="74" rx="10" ry="5" fill="'+C.wd+'" opacity="0.5"/>'
+    +'<circle cx="70" cy="35" r="17" fill="'+C.body+'"/>'
+    +'<circle cx="61" cy="39" r="6.5" fill="'+C.cheek+'" opacity="0.55"/>'
+    +'<circle cx="79" cy="39" r="6.5" fill="'+C.cheek+'" opacity="0.55"/>'
+    +'<circle cx="64" cy="30" r="6.5" fill="white"/><circle cx="76" cy="30" r="6.5" fill="white"/>'
+    +'<circle cx="64.5" cy="30.5" r="3.8" fill="#1a0a00"/><circle cx="76.5" cy="30.5" r="3.8" fill="#1a0a00"/>'
+    +'<circle cx="66" cy="29" r="1.8" fill="white"/><circle cx="78" cy="29" r="1.8" fill="white"/>'
+    +'<path d="M62,40 Q70,46 78,40" fill="none" stroke="#a06820" stroke-width="2.5" stroke-linecap="round"/>'
+    +'<path d="M63,20 Q54,10 46,6" fill="none" stroke="#8B6914" stroke-width="3.5" stroke-linecap="round"/>'
+    +'<path d="M77,20 Q86,10 94,6" fill="none" stroke="#8B6914" stroke-width="3.5" stroke-linecap="round"/>'
+    +'<circle cx="46" cy="6" r="5.5" fill="'+C.wu+'"/>'
+    +'<circle cx="94" cy="6" r="5.5" fill="'+C.wu+'"/>'
+    +'</svg>';
 }
 
-// ============================================================
-// MINI MONSTER SVGs — for level cards
-// ============================================================
-function hedoraMini() {
-  return '<svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg">'
-    + '<path d="M10,40 Q5,25 12,15 Q20,8 30,10 Q42,8 50,18 Q57,28 52,42 Q44,55 30,55 Q15,55 10,40Z" fill="#5A7A2A"/>'
-    + '<path d="M20,55 Q17,63 21,66" fill="none" stroke="#8BC34A" stroke-width="3" stroke-linecap="round"/>'
-    + '<path d="M38,55 Q41,63 37,66" fill="none" stroke="#8BC34A" stroke-width="3" stroke-linecap="round"/>'
-    + '<circle cx="24" cy="26" r="8" fill="#222"/><circle cx="38" cy="22" r="6" fill="#222"/>'
-    + '<circle cx="24" cy="26" r="4.5" fill="#AAFF00"/><circle cx="38" cy="22" r="3" fill="#AAFF00"/>'
-    + '<circle cx="24" cy="24" r="2" fill="#003300"/><circle cx="38" cy="20" r="1.5" fill="#003300"/>'
-    + '<circle cx="15" cy="36" r="3" fill="#8BC34A" opacity="0.6"/>'
-    + '<circle cx="45" cy="30" r="4" fill="#8BC34A" opacity="0.6"/>'
-    + '<circle cx="30" cy="18" r="2.5" fill="#AAFF00" opacity="0.7"/>'
-    + '</svg>';
+// ================================================================
+// DESTOROYAH (デストロイヤー) — demonic purple destroyer
+// ================================================================
+function destoroyahSVG(w, h) {
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 140" width="'+w+'" height="'+h+'">'
+    // shadow
+    +'<ellipse cx="65" cy="135" rx="36" ry="6" fill="#200030" opacity="0.4"/>'
+    // BAT WINGS
+    +'<path d="M42,60 Q22,40 8,28 Q4,50 12,66 Q24,74 42,72Z" fill="#3A0060"/>'
+    +'<path d="M88,60 Q108,40 122,28 Q126,50 118,66 Q106,74 88,72Z" fill="#3A0060"/>'
+    // wing inner membrane
+    +'<path d="M42,62 Q26,46 14,36 Q12,52 18,64 Q28,70 42,68Z" fill="#220040" opacity="0.7"/>'
+    +'<path d="M88,62 Q104,46 116,36 Q118,52 112,64 Q102,70 88,68Z" fill="#220040" opacity="0.7"/>'
+    // TAIL
+    +'<path d="M55,126 Q42,132 38,128 Q40,118 52,116Z" fill="#4A0080"/>'
+    +'<path d="M60,126 Q62,136 58,138 Q54,136 52,128Z" fill="#5A0090"/>'
+    // BODY — large, hunched
+    +'<ellipse cx="65" cy="90" rx="34" ry="36" fill="#5A0090"/>'
+    // body armor ridges
+    +'<path d="M40,75 Q65,65 90,75" fill="none" stroke="#4A0080" stroke-width="3"/>'
+    +'<path d="M38,88 Q65,78 92,88" fill="none" stroke="#4A0080" stroke-width="2.5"/>'
+    // ENERGY CRACKS on chest (orange glow)
+    +'<path d="M58,74 Q60,82 55,90 Q62,86 65,78 Q68,86 75,90 Q70,82 72,74" fill="none" stroke="#FF6600" stroke-width="2.5" stroke-linecap="round"/>'
+    +'<path d="M50,84 Q58,80 65,84 Q72,80 80,84" fill="none" stroke="#FF4400" stroke-width="2" stroke-linecap="round" opacity="0.7"/>'
+    +'<circle cx="65" cy="82" r="5" fill="#FF4400" opacity="0.4"/>'
+    // LEFT BIG CLAW
+    +'<line x1="38" y1="84" x2="12" y2="72" stroke="#4A0080" stroke-width="9" stroke-linecap="round"/>'
+    +'<path d="M2,62 Q-4,52 6,50 Q14,52 16,62 Q18,72 12,76Z" fill="#4A0080"/>'
+    +'<path d="M12,54 Q20,46 24,54 Q20,66 12,68Z" fill="#6600AA"/>'
+    +'<path d="M2,68 Q-4,76 2,80 Q10,78 14,72Z" fill="#6600AA"/>'
+    // claw energy tip
+    +'<circle cx="4" cy="54" r="4" fill="#FF4400" opacity="0.7"/>'
+    // RIGHT BIG CLAW
+    +'<line x1="92" y1="84" x2="118" y2="72" stroke="#4A0080" stroke-width="9" stroke-linecap="round"/>'
+    +'<path d="M128,62 Q134,52 124,50 Q116,52 114,62 Q112,72 118,76Z" fill="#4A0080"/>'
+    +'<path d="M118,54 Q110,46 106,54 Q110,66 118,68Z" fill="#6600AA"/>'
+    +'<path d="M128,68 Q134,76 128,80 Q120,78 116,72Z" fill="#6600AA"/>'
+    +'<circle cx="126" cy="54" r="4" fill="#FF4400" opacity="0.7"/>'
+    // NECK
+    +'<rect x="56" y="46" width="18" height="26" rx="9" fill="#5A0090"/>'
+    // HEAD
+    +'<ellipse cx="65" cy="38" rx="26" ry="22" fill="#6600AA"/>'
+    // HORNS — signature feature
+    +'<path d="M52,24 Q44,10 40,2 Q50,4 56,16 Q60,22 56,28Z" fill="#3A0060"/>'
+    +'<path d="M78,24 Q86,10 90,2 Q80,4 74,16 Q70,22 74,28Z" fill="#3A0060"/>'
+    // horn glow
+    +'<path d="M52,22 Q46,12 42,4 Q50,6 54,18Z" fill="#FF4400" opacity="0.3"/>'
+    +'<path d="M78,22 Q84,12 88,4 Q80,6 76,18Z" fill="#FF4400" opacity="0.3"/>'
+    // EYES — red glowing
+    +'<ellipse cx="55" cy="34" rx="9" ry="8" fill="#1A0000"/>'
+    +'<ellipse cx="75" cy="34" rx="9" ry="8" fill="#1A0000"/>'
+    +'<ellipse cx="55" cy="34" rx="5.5" ry="5" fill="#FF0000"/>'
+    +'<ellipse cx="75" cy="34" rx="5.5" ry="5" fill="#FF0000"/>'
+    +'<ellipse cx="55" cy="34" rx="2.5" ry="2.5" fill="#FF8800"/>'
+    +'<ellipse cx="75" cy="34" rx="2.5" ry="2.5" fill="#FF8800"/>'
+    // eye glow corona
+    +'<ellipse cx="55" cy="34" rx="10" ry="9" fill="none" stroke="#FF4400" stroke-width="1.5" opacity="0.5"/>'
+    +'<ellipse cx="75" cy="34" rx="10" ry="9" fill="none" stroke="#FF4400" stroke-width="1.5" opacity="0.5"/>'
+    // mouth
+    +'<path d="M54,48 Q65,56 76,48" fill="none" stroke="#3A0060" stroke-width="3" stroke-linecap="round"/>'
+    +'<line x1="59" y1="49" x2="58" y2="54" stroke="#FF6600" stroke-width="2" stroke-linecap="round"/>'
+    +'<line x1="65" y1="52" x2="65" y2="57" stroke="#FF6600" stroke-width="2" stroke-linecap="round"/>'
+    +'<line x1="71" y1="49" x2="72" y2="54" stroke="#FF6600" stroke-width="2" stroke-linecap="round"/>'
+    +'</svg>';
 }
 
-function kamacurasMini() {
-  return '<svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg">'
-    + '<ellipse cx="30" cy="40" rx="10" ry="16" fill="#2D6A2D"/>'
-    + '<ellipse cx="30" cy="19" rx="11" ry="10" fill="#3A8A3A"/>'
-    + '<ellipse cx="22" cy="17" rx="6.5" ry="7.5" fill="#880088"/>'
-    + '<ellipse cx="38" cy="17" rx="6.5" ry="7.5" fill="#880088"/>'
-    + '<ellipse cx="22" cy="17" rx="3.5" ry="4.5" fill="#CC00CC"/>'
-    + '<ellipse cx="38" cy="17" rx="3.5" ry="4.5" fill="#CC00CC"/>'
-    + '<circle cx="22" cy="17" r="1.5" fill="white"/><circle cx="38" cy="17" r="1.5" fill="white"/>'
-    + '<line x1="26" y1="11" x2="18" y2="2" stroke="#2D6A2D" stroke-width="2.2" stroke-linecap="round"/>'
-    + '<line x1="34" y1="11" x2="42" y2="2" stroke="#2D6A2D" stroke-width="2.2" stroke-linecap="round"/>'
-    + '<path d="M20,29 Q7,23 5,13 Q11,9 16,18 Q20,24 22,30Z" fill="#1A4A1A"/>'
-    + '<path d="M40,29 Q53,23 55,13 Q49,9 44,18 Q40,24 38,30Z" fill="#1A4A1A"/>'
-    + '<line x1="22" y1="50" x2="10" y2="58" stroke="#2D6A2D" stroke-width="2.5" stroke-linecap="round"/>'
-    + '<line x1="38" y1="50" x2="50" y2="58" stroke="#2D6A2D" stroke-width="2.5" stroke-linecap="round"/>'
-    + '</svg>';
+// ================================================================
+// KING GHIDORAH (キングギドラ) — 3-headed golden dragon
+// ================================================================
+function kingGhidorahSVG(w, h) {
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 150" width="'+w+'" height="'+h+'">'
+    // shadow
+    +'<ellipse cx="90" cy="146" rx="55" ry="7" fill="#886600" opacity="0.25"/>'
+    // TWIN TAILS
+    +'<path d="M62,132 Q44,140 36,136 Q40,124 54,120 Q60,126 62,132Z" fill="#B8860B"/>'
+    +'<path d="M118,132 Q136,140 144,136 Q140,124 126,120 Q120,126 118,132Z" fill="#B8860B"/>'
+    // tail segments
+    +'<path d="M62,130 Q52,136 44,132 Q48,124 58,122Z" fill="#DAA520" opacity="0.6"/>'
+    +'<path d="M118,130 Q128,136 136,132 Q132,124 122,122Z" fill="#DAA520" opacity="0.6"/>'
+    // MAIN BODY
+    +'<ellipse cx="90" cy="110" rx="38" ry="26" fill="#B8860B"/>'
+    // body scales
+    +'<path d="M52,110 Q90,100 128,110" fill="none" stroke="#9A7009" stroke-width="2.5"/>'
+    +'<path d="M56,118 Q90,108 124,118" fill="none" stroke="#9A7009" stroke-width="2"/>'
+    // LEFT WING
+    +'<path d="M54,102 Q28,80 10,60 Q6,80 14,96 Q28,106 54,110Z" fill="#DAA520"/>'
+    +'<path d="M54,104 Q32,86 16,68 Q14,84 20,96 Q32,104 54,108Z" fill="#B8860B" opacity="0.5"/>'
+    // wing feathers
+    +'<line x1="22" y1="70" x2="40" y2="92" stroke="#9A7009" stroke-width="1.5" opacity="0.6"/>'
+    +'<line x1="14" y1="78" x2="32" y2="98" stroke="#9A7009" stroke-width="1.5" opacity="0.6"/>'
+    // RIGHT WING
+    +'<path d="M126,102 Q152,80 170,60 Q174,80 166,96 Q152,106 126,110Z" fill="#DAA520"/>'
+    +'<path d="M126,104 Q148,86 164,68 Q166,84 160,96 Q148,104 126,108Z" fill="#B8860B" opacity="0.5"/>'
+    +'<line x1="158" y1="70" x2="140" y2="92" stroke="#9A7009" stroke-width="1.5" opacity="0.6"/>'
+    +'<line x1="166" y1="78" x2="148" y2="98" stroke="#9A7009" stroke-width="1.5" opacity="0.6"/>'
+    // ===== LEFT NECK & HEAD =====
+    +'<path d="M68,96 Q52,78 44,58 Q56,52 60,66 Q66,80 74,92Z" stroke="#DAA520" stroke-width="12" fill="none" stroke-linecap="round"/>'
+    // left head
+    +'<ellipse cx="44" cy="46" rx="18" ry="14" fill="#DAA520"/>'
+    // left head top ridge
+    +'<path d="M30,42 Q44,36 58,42" fill="none" stroke="#9A7009" stroke-width="2"/>'
+    // left horns
+    +'<path d="M36,36 Q30,24 28,16 Q36,18 38,28 Q40,34 38,38Z" fill="#B8860B"/>'
+    +'<path d="M52,36 Q58,24 60,16 Q52,18 50,28 Q48,34 50,38Z" fill="#B8860B"/>'
+    // left eyes
+    +'<ellipse cx="38" cy="44" rx="6" ry="5.5" fill="#1A0800"/>'
+    +'<ellipse cx="50" cy="44" rx="6" ry="5.5" fill="#1A0800"/>'
+    +'<ellipse cx="38" cy="44" rx="3.5" ry="3.5" fill="#FF0000"/>'
+    +'<ellipse cx="50" cy="44" rx="3.5" ry="3.5" fill="#FF0000"/>'
+    +'<circle cx="39" cy="43" r="1.5" fill="#FF8800"/>'
+    +'<circle cx="51" cy="43" r="1.5" fill="#FF8800"/>'
+    // left jaw
+    +'<path d="M32,52 Q44,58 56,52" fill="none" stroke="#9A7009" stroke-width="2.5" stroke-linecap="round"/>'
+    // ===== CENTER NECK & HEAD =====
+    +'<path d="M84,94 Q84,72 84,50 Q90,44 96,50 Q96,72 96,94Z" stroke="#FFD700" stroke-width="14" fill="none" stroke-linecap="round"/>'
+    // center head (larger, dominant)
+    +'<ellipse cx="90" cy="36" rx="22" ry="16" fill="#FFD700"/>'
+    +'<path d="M70,32 Q90,24 110,32" fill="none" stroke="#B8860B" stroke-width="2.5"/>'
+    // center horns (bigger)
+    +'<path d="M80,24 Q72,10 70,0 Q80,2 82,14 Q84,20 82,26Z" fill="#DAA520"/>'
+    +'<path d="M100,24 Q108,10 110,0 Q100,2 98,14 Q96,20 98,26Z" fill="#DAA520"/>'
+    // center eyes
+    +'<ellipse cx="82" cy="32" rx="7.5" ry="7" fill="#1A0800"/>'
+    +'<ellipse cx="98" cy="32" rx="7.5" ry="7" fill="#1A0800"/>'
+    +'<ellipse cx="82" cy="32" rx="4.5" ry="4" fill="#FF0000"/>'
+    +'<ellipse cx="98" cy="32" rx="4.5" ry="4" fill="#FF0000"/>'
+    +'<circle cx="83.5" cy="30.5" r="2" fill="#FF8800"/>'
+    +'<circle cx="99.5" cy="30.5" r="2" fill="#FF8800"/>'
+    // center jaw
+    +'<path d="M74,44 Q90,52 106,44" fill="none" stroke="#B8860B" stroke-width="3" stroke-linecap="round"/>'
+    // lightning from center mouth
+    +'<path d="M86,50 Q82,56 88,58 Q82,60 86,66" fill="none" stroke="#FFD700" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>'
+    // ===== RIGHT NECK & HEAD =====
+    +'<path d="M112,96 Q128,78 136,58 Q124,52 120,66 Q114,80 106,92Z" stroke="#DAA520" stroke-width="12" fill="none" stroke-linecap="round"/>'
+    // right head
+    +'<ellipse cx="136" cy="46" rx="18" ry="14" fill="#DAA520"/>'
+    +'<path d="M122,42 Q136,36 150,42" fill="none" stroke="#9A7009" stroke-width="2"/>'
+    // right horns
+    +'<path d="M124,36 Q118,24 116,16 Q124,18 126,28 Q128,34 126,38Z" fill="#B8860B"/>'
+    +'<path d="M148,36 Q154,24 156,16 Q148,18 146,28 Q144,34 146,38Z" fill="#B8860B"/>'
+    // right eyes
+    +'<ellipse cx="128" cy="44" rx="6" ry="5.5" fill="#1A0800"/>'
+    +'<ellipse cx="144" cy="44" rx="6" ry="5.5" fill="#1A0800"/>'
+    +'<ellipse cx="128" cy="44" rx="3.5" ry="3.5" fill="#FF0000"/>'
+    +'<ellipse cx="144" cy="44" rx="3.5" ry="3.5" fill="#FF0000"/>'
+    +'<circle cx="129" cy="43" r="1.5" fill="#FF8800"/>'
+    +'<circle cx="145" cy="43" r="1.5" fill="#FF8800"/>'
+    // right jaw
+    +'<path d="M124,52 Q136,58 148,52" fill="none" stroke="#9A7009" stroke-width="2.5" stroke-linecap="round"/>'
+    +'</svg>';
 }
 
-function anguirusMini() {
-  return '<svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg">'
-    + '<ellipse cx="34" cy="40" rx="22" ry="14" fill="#8B6914"/>'
-    + '<polygon points="16,36 13,23 20,34" fill="#6B4E10"/>'
-    + '<polygon points="24,30 22,17 29,29" fill="#6B4E10"/>'
-    + '<polygon points="32,27 32,14 38,27" fill="#6B4E10"/>'
-    + '<polygon points="40,30 42,17 47,29" fill="#6B4E10"/>'
-    + '<polygon points="48,34 51,23 55,34" fill="#6B4E10"/>'
-    + '<ellipse cx="14" cy="40" rx="11" ry="9" fill="#9B7824"/>'
-    + '<circle cx="9" cy="37" r="3.5" fill="#333"/><circle cx="9" cy="37" r="1.8" fill="#FFD700"/>'
-    + '<path d="M55,42 Q64,40 62,47 Q57,52 53,46Z" fill="#6B4E10"/>'
-    + '<rect x="18" y="50" width="8" height="10" rx="3" fill="#7A5E12"/>'
-    + '<rect x="30" y="50" width="8" height="10" rx="3" fill="#7A5E12"/>'
-    + '<rect x="42" y="50" width="8" height="10" rx="3" fill="#7A5E12"/>'
-    + '</svg>';
+// ================================================================
+// THUMBNAIL helpers (reuse full SVGs at small sizes)
+// ================================================================
+function thumbSVG(charKey, size) {
+  size = size || 44;
+  var fn = CHAR_SVG_FN[charKey];
+  return fn ? fn(size, size) : '<span style="font-size:'+(size*0.6)+'px">❓</span>';
 }
 
-function kingGhidorahMini() {
-  return '<svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg">'
-    + '<ellipse cx="30" cy="48" rx="16" ry="10" fill="#B8860B"/>'
-    // wings
-    + '<path d="M14,44 Q4,36 7,25" fill="none" stroke="#B8860B" stroke-width="4" stroke-linecap="round"/>'
-    + '<path d="M46,44 Q56,36 53,25" fill="none" stroke="#B8860B" stroke-width="4" stroke-linecap="round"/>'
-    // necks
-    + '<path d="M22,40 Q18,30 12,20" stroke="#DAA520" stroke-width="5" fill="none" stroke-linecap="round"/>'
-    + '<path d="M30,38 Q30,26 30,14" stroke="#FFD700" stroke-width="5" fill="none" stroke-linecap="round"/>'
-    + '<path d="M38,40 Q42,30 48,20" stroke="#DAA520" stroke-width="5" fill="none" stroke-linecap="round"/>'
-    // heads
-    + '<ellipse cx="12" cy="17" rx="9" ry="7" fill="#DAA520"/>'
-    + '<ellipse cx="30" cy="11" rx="9" ry="7" fill="#FFD700"/>'
-    + '<ellipse cx="48" cy="17" rx="9" ry="7" fill="#DAA520"/>'
-    // eyes
-    + '<circle cx="9" cy="15" r="2" fill="red"/><circle cx="14" cy="15" r="2" fill="red"/>'
-    + '<circle cx="27" cy="9" r="2" fill="red"/><circle cx="33" cy="9" r="2" fill="red"/>'
-    + '<circle cx="45" cy="15" r="2" fill="red"/><circle cx="50" cy="15" r="2" fill="red"/>'
-    // horns on middle head
-    + '<line x1="27" y1="6" x2="24" y2="1" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>'
-    + '<line x1="33" y1="6" x2="36" y2="1" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>'
-    + '</svg>';
-}
-
-// ============================================================
-// CHARACTER FORM HELPERS
-// ============================================================
-var GODZILLA_FORMS = {
-  1: '第一形態', 2: '第二形態', 3: '原子力ゴジラ', 4: 'バーニングゴジラ', 5: 'メカゴジラ'
+// ================================================================
+// CHARACTER CONFIG
+// ================================================================
+var CHAR_SVG_FN = {
+  godzilla1: function(w,h){ return godzillaSVG(w,h,1); },
+  godzilla2: function(w,h){ return godzillaSVG(w,h,2); },
+  godzilla3: function(w,h){ return godzillaSVG(w,h,3); },
+  godzilla4: function(w,h){ return godzillaSVG(w,h,4); },
+  mecha:     function(w,h){ return godzillaSVG(w,h,5); },
+  hedorah:   hedorahSVG,
+  ebirah:    ebirahSVG,
+  kamacuras: kamacurasSVG,
+  mothra:    function(w,h){ return mothraSVG(w,h,1); },
+  destoroyah:destoroyahSVG,
+  ghidorah:  kingGhidorahSVG,
 };
-var MOTHRA_FORMS = {
-  1: 'モスラ', 2: 'アクアモスラ', 3: 'レインボーモスラ', 4: 'アイスモスラ'
+
+var CHARS = {
+  godzilla1:  { name:'ゴジラ', label:'第一形態',    accent:'#00CCFF', accentBg:'rgba(0,200,255,0.15)',
+    gameBg:'linear-gradient(180deg,#0f0c29 0%,#302b63 50%,#24243e 100%)',
+    resultBg:'linear-gradient(160deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)',
+    btnColor:'#0066FF',
+    correctMsgs:['ガオー！すごい！✨','ゴジラもびっくり！💪','さすがだ！🌟','だいせいかい！🎉'],
+    winMsgs:['ゴジラがほえた！咆哮！🦖','ガオー！やったぞー！💪','ゴジラも喜んでるよ！🌟'],
+    sparkles:['🦖','⚡','💙','✨'] },
+  godzilla2:  { name:'ゴジラ', label:'第二形態',    accent:'#44FF88', accentBg:'rgba(40,180,80,0.15)',
+    gameBg:'linear-gradient(180deg,#0a1f0a 0%,#0d2d0d 50%,#0a1a0a 100%)',
+    resultBg:'linear-gradient(160deg,#0a1f0a 0%,#0d2d0d 60%,#1a3a1a 100%)',
+    btnColor:'#1a8a3a',
+    correctMsgs:['進化したゴジラすごい！✨','だいせいかい！💪','さすが！🌟','やったね！🎉'],
+    winMsgs:['第二形態のゴジラが勝利！🦖','進化ゴジラも祝ってる！💪','やったーゴジラ！🌿'],
+    sparkles:['🦖','🌿','💚','✨'] },
+  hedorah:    { name:'ヘドラ', label:'',            accent:'#AAFF00', accentBg:'rgba(100,200,0,0.15)',
+    gameBg:'linear-gradient(180deg,#0a1a02 0%,#142808 50%,#0a1a05 100%)',
+    resultBg:'linear-gradient(160deg,#0a1a02 0%,#1a3a08 50%,#0a2a05 100%)',
+    btnColor:'#3A7A0A',
+    correctMsgs:['ヘドラもよろこんでる！💚','すごい！ドロドロ！✨','だいせいかい！🌱','やったね！💥'],
+    winMsgs:['ヘドラがドヤ顔してる！💚','どろどろクリア！🎉','ヘドラも喜んでるよ！✨'],
+    sparkles:['🌿','💚','☣️','✨'] },
+  ebirah:     { name:'エビラ', label:'',            accent:'#FF6644', accentBg:'rgba(220,80,40,0.15)',
+    gameBg:'linear-gradient(180deg,#1a0a0a 0%,#3a1010 50%,#1a0808 100%)',
+    resultBg:'linear-gradient(160deg,#1a0806 0%,#3a1408 50%,#2a0a06 100%)',
+    btnColor:'#CC3300',
+    correctMsgs:['エビラのハサミでパチン！✨','すごい！海のモンスター！🦞','だいせいかい！💥','やったね！🎉'],
+    winMsgs:['エビラがハサミをパチパチ！🦞','海のモンスタークリア！🌊','エビラも喜んでるよ！🎉'],
+    sparkles:['🦞','🌊','❤️','✨'] },
+  kamacuras:  { name:'カマキラス', label:'',         accent:'#CC00CC', accentBg:'rgba(150,0,150,0.15)',
+    gameBg:'linear-gradient(180deg,#0a1a0a 0%,#0d280d 50%,#0a1808 100%)',
+    resultBg:'linear-gradient(160deg,#0a1a0a 0%,#0d2a0d 60%,#0a200a 100%)',
+    btnColor:'#1A6A1A',
+    correctMsgs:['カマキラスのカマが光った！✨','すごい！カマが素早い！💚','だいせいかい！🌿','やったね！💥'],
+    winMsgs:['カマキラスがカマをフリフリ！🦗','昆虫モンスタークリア！🌿','カマキラスも喜んでるよ！✨'],
+    sparkles:['🦗','🌿','💜','✨'] },
+  mothra:     { name:'モスラ', label:'',            accent:'#FFD700', accentBg:'rgba(220,170,0,0.15)',
+    gameBg:'linear-gradient(180deg,#1a0e28 0%,#2a1a40 50%,#1a1030 100%)',
+    resultBg:'linear-gradient(160deg,#1a0e28 0%,#2a1840 50%,#180e28 100%)',
+    btnColor:'#886600',
+    correctMsgs:['モスラが羽ばたいた！✨','きれい！モスラすごい！🌸','だいせいかい！🦋','やったね！🎉'],
+    winMsgs:['モスラが祝福の羽ばたき！🦋','モスラクリア！翼がきれい！✨','モスラも喜んでるよ！🌸'],
+    sparkles:['🦋','🌸','⭐','✨'] },
+  destoroyah: { name:'デストロイヤー', label:'',    accent:'#FF4400', accentBg:'rgba(200,50,0,0.15)',
+    gameBg:'linear-gradient(180deg,#100010 0%,#200030 50%,#100020 100%)',
+    resultBg:'linear-gradient(160deg,#100010 0%,#200030 60%,#180020 100%)',
+    btnColor:'#6600AA',
+    correctMsgs:['デストロイヤーがほめてる！🔥','すごい！エネルギー全開！✨','だいせいかい！💥','やったね！🎉'],
+    winMsgs:['デストロイヤーが雄叫び！🔥','悪魔モンスタークリア！💥','デストロイヤーも喜んでるよ！✨'],
+    sparkles:['🔥','💜','⚡','✨'] },
+  ghidorah:   { name:'キングギドラ', label:'',      accent:'#FFD700', accentBg:'rgba(200,150,0,0.15)',
+    gameBg:'linear-gradient(180deg,#1a1200 0%,#2a1e00 50%,#1a1400 100%)',
+    resultBg:'linear-gradient(160deg,#1a1200 0%,#2a2000 60%,#1a1600 100%)',
+    btnColor:'#886600',
+    correctMsgs:['ギドラの3つの首がうなずいた！✨','すごい！3頭の王！👑','だいせいかい！⚡','やったね！🎉'],
+    winMsgs:['3頭のギドラが大喜び！👑','宇宙モンスタークリア！⚡','キングギドラも喜んでるよ！🌟'],
+    sparkles:['👑','⚡','🌟','✨'] },
+  godzilla3:  { name:'原子力ゴジラ', label:'',      accent:'#00FFFF', accentBg:'rgba(0,220,255,0.15)',
+    gameBg:'linear-gradient(180deg,#000a1a 0%,#001030 50%,#000a20 100%)',
+    resultBg:'linear-gradient(160deg,#000a1a 0%,#001838 50%,#000a20 100%)',
+    btnColor:'#004488',
+    correctMsgs:['原子力が爆発！✨','すごい！青く輝いた！💙','だいせいかい！⚡','やったね！🎉'],
+    winMsgs:['原子力ゴジラが輝いた！💙','青い光でクリア！✨','ゴジラが全力を出した！⚡'],
+    sparkles:['💙','⚡','🔵','✨'] },
+  godzilla4:  { name:'バーニングゴジラ', label:'',  accent:'#FF8800', accentBg:'rgba(220,100,0,0.15)',
+    gameBg:'linear-gradient(180deg,#1a0500 0%,#2a0a00 50%,#1a0600 100%)',
+    resultBg:'linear-gradient(160deg,#1a0500 0%,#300a00 50%,#200600 100%)',
+    btnColor:'#CC4400',
+    correctMsgs:['燃えるゴジラ！すごい！🔥','炎のゴジラだいせいかい！✨','熱い！やったね！💥','すごい！🎉'],
+    winMsgs:['バーニングゴジラが爆発！🔥','炎のクリア！すごい！✨','燃えるゴジラが喜んでる！💥'],
+    sparkles:['🔥','🧡','⚡','✨'] },
+  mecha:      { name:'メカゴジラ', label:'',        accent:'#00FFFF', accentBg:'rgba(0,220,255,0.1)',
+    gameBg:'linear-gradient(180deg,#0a0a0a 0%,#1a1a1a 50%,#0a0a0a 100%)',
+    resultBg:'linear-gradient(160deg,#0a0a12 0%,#1a1a2a 50%,#0a0a18 100%)',
+    btnColor:'#446688',
+    correctMsgs:['メカゴジラのレーザー命中！✨','機械のすごさだいせいかい！🤖','システム全開！💙','やったね！🎉'],
+    winMsgs:['メカゴジラのシステム完全稼働！🤖','機械モンスタークリア！✨','メカゴジラが点灯した！💙'],
+    sparkles:['🤖','💙','⚡','✨'] },
 };
 
-function getLevelGodzillaForm(levelId) {
-  if (levelId <= 2) return 1;
-  if (levelId <= 4) return 2;
-  if (levelId <= 6) return 3;
-  if (levelId <= 8) return 4;
-  return 5;
-}
-
-function getLevelMothraForm(levelId) {
-  if (levelId <= 3) return 1;
-  if (levelId <= 5) return 2;
-  if (levelId <= 7) return 3;
-  return 4;
-}
-
-function getPlayerGodzillaForm() {
-  var maxCleared = 0;
-  Object.keys(state.progress).forEach(function(k) {
-    if (state.progress[k] && state.progress[k].stars > 0) {
-      maxCleared = Math.max(maxCleared, parseInt(k));
-    }
-  });
-  return getLevelGodzillaForm(Math.max(1, maxCleared));
-}
-
-// ============================================================
+// ================================================================
 // GAME DATA
-// ============================================================
+// ================================================================
 var LEVEL_CONFIG = [
-  { id:1,  name:'いち＋いち',    icon:'🌱', color:'#81ECEC', monster:null,
+  { id:1,  name:'いち＋いち',    char:'godzilla1', color:'#81ECEC',
     gen: function(){ var a=rnd(1,5); var b=rnd(1,9-a); return [a,b]; } },
-  { id:2,  name:'もっとたす',    icon:'🌼', color:'#FFEAA7', monster:null,
+  { id:2,  name:'もっとたす',    char:'godzilla2', color:'#FFEAA7',
     gen: function(){ return [rnd(1,9),rnd(1,9)]; } },
-  { id:3,  name:'10のなかま',    icon:'🌟', color:'#74B9FF', monster:'hedora',
+  { id:3,  name:'10のなかま',    char:'hedorah',   color:'#55BB44',
     gen: function(){ return [10,rnd(1,9)]; } },
-  { id:4,  name:'にじゅうたす',  icon:'🌈', color:'#A29BFE', monster:'anguirus',
-    gen: function(){ return [rnd(1,5)*10, rnd(1,9)]; } },
-  { id:5,  name:'くりあがりなし',icon:'🦋', color:'#55EFC4', monster:'kamacuras',
-    gen: function(){ var a=rnd(10,59); var mb=9-(a%10); return [a, mb>0?rnd(1,mb):1]; } },
-  { id:6,  name:'くりあがり！',  icon:'🚀', color:'#FDCB6E', monster:null,
+  { id:4,  name:'エビラのうみ',  char:'ebirah',    color:'#FF8866',
+    gen: function(){ return [rnd(1,5)*10,rnd(1,9)]; } },
+  { id:5,  name:'カマキラス！',  char:'kamacuras', color:'#AAFFAA',
+    gen: function(){ var a=rnd(10,59); var mb=9-(a%10); return [a,mb>0?rnd(1,mb):1]; } },
+  { id:6,  name:'モスラのわ',    char:'mothra',    color:'#FFD700',
     gen: function(){ var t=rnd(1,8)*10; var o=rnd(1,9); var b=10-o+rnd(1,5); return [t+o,b]; } },
-  { id:7,  name:'にけたプラス',  icon:'⚡', color:'#FF7675', monster:null,
+  { id:7,  name:'デストロイヤー',char:'destoroyah',color:'#BB88FF',
     gen: function(){
       var a=rnd(11,49); var ao=a%10; var at=Math.floor(a/10);
-      return [a, rnd(1,9-at)*10+rnd(1,9-ao)];
+      return [a,rnd(1,9-at)*10+rnd(1,9-ao)];
     } },
-  { id:8,  name:'チャレンジ！',  icon:'🏆', color:'#E17055', monster:null,
+  { id:8,  name:'ギドラのいかり',char:'ghidorah',  color:'#FFE44D',
     gen: function(){ return [rnd(11,79),rnd(11,79)]; } },
-  { id:9,  name:'ひゃくのくに', icon:'🌍', color:'#6C5CE7', monster:'ghidorah',
+  { id:9,  name:'げんしりょく！', char:'godzilla3', color:'#44AAFF',
     gen: function(){ return [rnd(100,299),rnd(10,99)]; } },
-  { id:10, name:'マスター！',    icon:'👑', color:'#FDCB6E', monster:'ghidorah',
+  { id:10, name:'メカゴジラ！',  char:'mecha',     color:'#CCDDEE',
     gen: function(){ return [rnd(100,599),rnd(100,399)]; } },
 ];
 
 var TOTAL_Q = 10;
+var WRONG_MSGS = ['もう一回！💪','おしい！','がんばれ！⚡','つぎはいけるよ！'];
+var INTRO_MSGS = ['いくつになるかな？','こたえはどれ？','さあ、とくよ！','かんがえてみよう🤔','できるかな？✨'];
 
-var CORRECT_MSGS = ['ガオー！すごい！✨','やったね！🎉','かんぺき！⭐','さすが！！🎊','だいせいかい！🌟','ゴジラもびっくり！💪','その調子！✨','ブラボー！🎶'];
-var WRONG_MSGS   = ['もう一回！💪','おしい！','がんばれ！⚡','つぎはいけるよ！'];
-var INTRO_MSGS   = ['いくつになるかな？','こたえはどれ？','さあ、とくよ！','かんがえてみよう🤔','できるかな？✨'];
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
 
-function rnd(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
-
-// ============================================================
+// ================================================================
 // STATE
-// ============================================================
+// ================================================================
 var state = {
   currentLevel: 1,
   questions: [],
   qIndex: 0,
   score: 0,
   answering: false,
-  progress: JSON.parse(localStorage.getItem('mathProgress') || '{}'),
+  progress: JSON.parse(localStorage.getItem('mathProgress2') || '{}'),
 };
+function saveProgress(){ localStorage.setItem('mathProgress2', JSON.stringify(state.progress)); }
+function getLevelStars(id){ return (state.progress[id]&&state.progress[id].stars)||0; }
+function isLevelUnlocked(id){ if(id===1)return true; return state.progress[id-1]&&state.progress[id-1].stars>0; }
 
-function saveProgress() { localStorage.setItem('mathProgress', JSON.stringify(state.progress)); }
-function getLevelStars(id) { return (state.progress[id] && state.progress[id].stars) || 0; }
-function isLevelUnlocked(id) {
-  if (id === 1) return true;
-  return state.progress[id-1] && state.progress[id-1].stars > 0;
+function getHomeMascotChar() {
+  var max=0;
+  Object.keys(state.progress).forEach(function(k){ if(state.progress[k]&&state.progress[k].stars>0)max=Math.max(max,parseInt(k)); });
+  return LEVEL_CONFIG[Math.max(0,Math.min(9,max))].char;
 }
 
-// ============================================================
+// ================================================================
 // AUDIO
-// ============================================================
-var AudioCtx = window.AudioContext || window.webkitAudioContext;
-var audioCtx = null;
-function getAudio() { if (!audioCtx) audioCtx = new AudioCtx(); return audioCtx; }
-
-function playTone(type) {
-  try {
-    var ctx = getAudio();
-    var osc = ctx.createOscillator();
-    var gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    if (type === 'correct') {
-      osc.frequency.setValueAtTime(523, ctx.currentTime);
-      osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
-      osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
-    } else if (type === 'wrong') {
-      osc.frequency.setValueAtTime(220, ctx.currentTime);
-      osc.frequency.setValueAtTime(180, ctx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
-    } else if (type === 'win') {
-      [523,659,784,1047].forEach(function(f, i) {
-        var o2 = ctx.createOscillator(); var g2 = ctx.createGain();
-        o2.connect(g2); g2.connect(ctx.destination);
-        o2.frequency.value = f;
-        g2.gain.setValueAtTime(0.25, ctx.currentTime + i*0.12);
-        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.12 + 0.4);
-        o2.start(ctx.currentTime + i*0.12); o2.stop(ctx.currentTime + i*0.12 + 0.4);
+// ================================================================
+var AudioCtx=window.AudioContext||window.webkitAudioContext,audioCtx=null;
+function getAudio(){ if(!audioCtx)audioCtx=new AudioCtx(); return audioCtx; }
+function playTone(type){
+  try{
+    var ctx=getAudio(),osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    if(type==='correct'){
+      osc.frequency.setValueAtTime(523,ctx.currentTime);
+      osc.frequency.setValueAtTime(659,ctx.currentTime+0.1);
+      osc.frequency.setValueAtTime(784,ctx.currentTime+0.2);
+      gain.gain.setValueAtTime(0.3,ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);
+      osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.5);
+    }else if(type==='wrong'){
+      osc.frequency.setValueAtTime(220,ctx.currentTime);
+      osc.frequency.setValueAtTime(180,ctx.currentTime+0.15);
+      gain.gain.setValueAtTime(0.2,ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.3);
+      osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.3);
+    }else if(type==='win'){
+      [523,659,784,1047].forEach(function(f,i){
+        var o2=ctx.createOscillator(),g2=ctx.createGain();
+        o2.connect(g2);g2.connect(ctx.destination);
+        o2.frequency.value=f;
+        g2.gain.setValueAtTime(0.25,ctx.currentTime+i*0.12);
+        g2.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.12+0.4);
+        o2.start(ctx.currentTime+i*0.12);o2.stop(ctx.currentTime+i*0.12+0.4);
       });
     }
-  } catch(e) {}
+  }catch(e){}
 }
 
-// ============================================================
+// ================================================================
 // CONFETTI
-// ============================================================
-var canvas = document.getElementById('confetti-canvas');
-var ctx2d = canvas.getContext('2d');
-var confettiPieces = [];
-var confettiAnim = null;
-
-function startConfetti() {
-  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-  confettiPieces = [];
-  var colors = ['#FF6B6B','#FFE66D','#4ECDC4','#A29BFE','#55EFC4','#FDCB6E','#00CCFF','#FF9FF3'];
-  for (var i = 0; i < 130; i++) {
-    confettiPieces.push({
-      x: Math.random()*canvas.width, y: -20,
-      w: rnd(8,18), h: rnd(6,12),
-      color: colors[rnd(0,colors.length-1)],
-      vx: (Math.random()-0.5)*4, vy: rnd(3,8),
-      rot: Math.random()*360, rotV: (Math.random()-0.5)*8,
-    });
-  }
-  if (confettiAnim) cancelAnimationFrame(confettiAnim);
-  animateConfetti();
-  setTimeout(stopConfetti, 3000);
+// ================================================================
+var canvas=document.getElementById('confetti-canvas'),ctx2d=canvas.getContext('2d'),confettiPieces=[],confettiAnim=null;
+function startConfetti(){
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;confettiPieces=[];
+  var col=['#FF6B6B','#FFE66D','#4ECDC4','#A29BFE','#55EFC4','#FDCB6E','#00CCFF','#FF9FF3'];
+  for(var i=0;i<140;i++){confettiPieces.push({x:Math.random()*canvas.width,y:-20,w:rnd(8,18),h:rnd(6,12),color:col[rnd(0,col.length-1)],vx:(Math.random()-0.5)*4,vy:rnd(3,8),rot:Math.random()*360,rotV:(Math.random()-0.5)*8});}
+  if(confettiAnim)cancelAnimationFrame(confettiAnim);
+  animConfetti();setTimeout(stopConfetti,3000);
 }
-function animateConfetti() {
+function animConfetti(){
   ctx2d.clearRect(0,0,canvas.width,canvas.height);
-  confettiPieces.forEach(function(p) {
-    ctx2d.save(); ctx2d.translate(p.x,p.y); ctx2d.rotate(p.rot*Math.PI/180);
-    ctx2d.fillStyle = p.color; ctx2d.fillRect(-p.w/2,-p.h/2,p.w,p.h);
-    ctx2d.restore();
-    p.x+=p.vx; p.y+=p.vy; p.rot+=p.rotV; p.vy+=0.1;
-  });
-  confettiPieces = confettiPieces.filter(function(p){ return p.y < canvas.height+20; });
-  if (confettiPieces.length > 0) confettiAnim = requestAnimationFrame(animateConfetti);
+  confettiPieces.forEach(function(p){ctx2d.save();ctx2d.translate(p.x,p.y);ctx2d.rotate(p.rot*Math.PI/180);ctx2d.fillStyle=p.color;ctx2d.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx2d.restore();p.x+=p.vx;p.y+=p.vy;p.rot+=p.rotV;p.vy+=0.1;});
+  confettiPieces=confettiPieces.filter(function(p){return p.y<canvas.height+20;});
+  if(confettiPieces.length>0)confettiAnim=requestAnimationFrame(animConfetti);
 }
-function stopConfetti() {
-  confettiPieces = [];
-  ctx2d.clearRect(0,0,canvas.width,canvas.height);
-}
+function stopConfetti(){confettiPieces=[];ctx2d.clearRect(0,0,canvas.width,canvas.height);}
 
-// ============================================================
+// ================================================================
 // SCREENS
-// ============================================================
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+// ================================================================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
-  if (id === 'levels') renderLevels();
-  if (id === 'home') updateHomeMascot();
+  if(id==='levels')renderLevels();
+  if(id==='home')updateHome();
 }
 
-function updateHomeMascot() {
-  var form = getPlayerGodzillaForm();
-  document.getElementById('home-mascot').innerHTML = godzillaSVG(120, 138, form);
-  document.getElementById('home-form-badge').textContent = 'ゴジラ ' + GODZILLA_FORMS[form];
+function updateHome(){
+  var ck=getHomeMascotChar();
+  var ch=CHARS[ck];
+  document.getElementById('home-mascot').innerHTML=CHAR_SVG_FN[ck](120,120);
+  document.getElementById('home-badge').textContent=ch.name+(ch.label?' '+ch.label:'');
+  document.getElementById('home-badge').style.color=ch.accent;
+  document.getElementById('home-badge').style.borderColor=ch.accent;
 }
 
-// ============================================================
-// LEVELS
-// ============================================================
-var MONSTER_FNS = { hedora: hedoraMini, kamacuras: kamacurasMini, anguirus: anguirusMini, ghidorah: kingGhidorahMini };
+// ================================================================
+// LEVEL SELECT
+// ================================================================
+function renderLevels(){
+  var grid=document.getElementById('levels-grid');
+  grid.innerHTML='';
+  var total=0;
+  LEVEL_CONFIG.forEach(function(lv){total+=getLevelStars(lv.id);});
+  document.getElementById('total-stars-display').textContent=total+' / 30 ほし';
+  document.getElementById('total-stars-emoji').textContent=total>=30?'🏆':total>=20?'🌟':total>=10?'⭐':'';
+  document.getElementById('all-done-badge').style.display=total>=30?'block':'none';
 
-function renderLevels() {
-  var grid = document.getElementById('levels-grid');
-  grid.innerHTML = '';
-  var total = 0;
-  LEVEL_CONFIG.forEach(function(lv){ total += getLevelStars(lv.id); });
-  document.getElementById('total-stars-display').textContent = total + ' / 30 ほし';
-  document.getElementById('total-stars-emoji').textContent = total >= 30 ? '🏆' : total >= 20 ? '🌟' : total >= 10 ? '⭐' : '';
-  document.getElementById('all-done-badge').style.display = total >= 30 ? 'block' : 'none';
+  LEVEL_CONFIG.forEach(function(lv){
+    var stars=getLevelStars(lv.id);
+    var unlocked=isLevelUnlocked(lv.id);
+    var completed=stars>0;
+    var ch=CHARS[lv.char];
+    var card=document.createElement('div');
+    card.className='level-card '+(unlocked?(completed?'completed':'unlocked'):'locked');
 
-  LEVEL_CONFIG.forEach(function(lv) {
-    var stars = getLevelStars(lv.id);
-    var unlocked = isLevelUnlocked(lv.id);
-    var completed = stars > 0;
-    var card = document.createElement('div');
-    card.className = 'level-card ' + (unlocked ? (completed ? 'completed' : 'unlocked') : 'locked');
+    var starStr=completed?'⭐'.repeat(stars)+'☆'.repeat(3-stars):(unlocked?'☆☆☆':'');
+    var thumbHtml=unlocked
+      ?CHAR_SVG_FN[lv.char](44,44)
+      :'<span style="font-size:28px">🔒</span>';
 
-    var starStr = completed ? '⭐'.repeat(stars) + '☆'.repeat(3-stars) : (unlocked ? '☆☆☆' : '');
-    var iconHTML = unlocked && lv.monster && MONSTER_FNS[lv.monster]
-      ? MONSTER_FNS[lv.monster]()
-      : '<span style="font-size:30px">' + (unlocked ? lv.icon : '🔒') + '</span>';
+    card.innerHTML=
+      '<div class="lc-num">Lv.'+lv.id+'</div>'
+      +'<div class="lc-thumb">'+thumbHtml+'</div>'
+      +'<div class="lc-name">'+lv.name+'</div>'
+      +(unlocked?'<div class="lc-char" style="background:'+ch.accentBg+';color:'+ch.accent+'">'+ch.name+(ch.label?' '+ch.label:'')+'</div>':'')
+      +'<div class="lc-stars">'+starStr+'</div>';
 
-    var gForm = getLevelGodzillaForm(lv.id);
-    var gLabel = unlocked ? ('<div class="level-gform">G ' + GODZILLA_FORMS[gForm] + '</div>') : '';
-
-    card.innerHTML =
-      '<div class="level-num">Lv.' + lv.id + '</div>' +
-      '<div class="level-icon">' + iconHTML + '</div>' +
-      '<div class="level-name">' + lv.name + '</div>' +
-      gLabel +
-      '<div class="level-stars">' + starStr + '</div>';
-
-    if (unlocked) card.addEventListener('click', (function(id){ return function(){ startLevel(id); }; })(lv.id));
+    if(unlocked)card.addEventListener('click',(function(id){return function(){startLevel(id);};})(lv.id));
     grid.appendChild(card);
   });
 }
 
-// ============================================================
+// ================================================================
 // GAME
-// ============================================================
-function startLevel(id) {
-  state.currentLevel = id;
-  state.qIndex = 0;
-  state.score = 0;
-  state.answering = false;
-  state.questions = generateQuestions(id);
+// ================================================================
+function startLevel(id){
+  state.currentLevel=id;state.qIndex=0;state.score=0;state.answering=false;
+  state.questions=genQuestions(id);
+  var lv=LEVEL_CONFIG[id-1];
+  var ch=CHARS[lv.char];
+  document.getElementById('game').style.background=ch.gameBg;
   showScreen('game');
   renderQuestion();
 }
 
-function generateQuestions(levelId) {
-  var lv = LEVEL_CONFIG[levelId - 1];
-  var qs = [];
-  for (var i = 0; i < TOTAL_Q; i++) {
-    var pair = lv.gen();
-    qs.push({ a: pair[0], b: pair[1], answer: pair[0] + pair[1] });
-  }
+function genQuestions(levelId){
+  var lv=LEVEL_CONFIG[levelId-1],qs=[];
+  for(var i=0;i<TOTAL_Q;i++){var p=lv.gen();qs.push({a:p[0],b:p[1],answer:p[0]+p[1]});}
   return qs;
 }
 
-function renderQuestion() {
-  var q = state.questions[state.qIndex];
-  var gForm = getLevelGodzillaForm(state.currentLevel);
+function renderQuestion(){
+  var q=state.questions[state.qIndex];
+  var lv=LEVEL_CONFIG[state.currentLevel-1];
+  var ch=CHARS[lv.char];
 
-  document.getElementById('level-badge').textContent = 'Lv.' + state.currentLevel;
-  document.getElementById('question-count').textContent = (state.qIndex + 1) + ' / ' + TOTAL_Q + 'もん';
-  document.getElementById('progress-bar').style.width = ((state.qIndex / TOTAL_Q) * 100) + '%';
-  document.getElementById('equation-box').textContent = q.a + ' + ' + q.b + ' = ?';
-  document.getElementById('speech-bubble').textContent = INTRO_MSGS[Math.floor(Math.random() * INTRO_MSGS.length)];
-  document.getElementById('form-label').textContent = 'ゴジラ ' + GODZILLA_FORMS[gForm];
-  document.getElementById('game-mascot').innerHTML = godzillaSVG(72, 82, gForm);
+  document.getElementById('level-badge').textContent='Lv.'+state.currentLevel;
+  document.getElementById('q-count').textContent=(state.qIndex+1)+' / '+TOTAL_Q+'もん';
+  document.getElementById('progress-bar').style.width=((state.qIndex/TOTAL_Q)*100)+'%';
+  document.getElementById('equation-box').textContent=q.a+' + '+q.b+' = ?';
+  document.getElementById('speech-bubble').textContent=INTRO_MSGS[Math.floor(Math.random()*INTRO_MSGS.length)];
 
-  var choices = generateChoices(q.answer, state.currentLevel);
-  var grid = document.getElementById('choices-grid');
-  grid.innerHTML = '';
-  choices.forEach(function(val) {
-    var btn = document.createElement('button');
-    btn.className = 'choice-btn';
-    btn.textContent = val;
-    btn.addEventListener('click', (function(b,v,a){ return function(){ handleChoice(b,v,a); }; })(btn, val, q.answer));
-    grid.appendChild(btn);
+  var label=document.getElementById('char-label');
+  label.textContent=ch.name+(ch.label?' '+ch.label:'');
+  label.style.background=ch.accentBg;
+  label.style.color=ch.accent;
+
+  document.getElementById('game-mascot').innerHTML=CHAR_SVG_FN[lv.char](90,90);
+
+  var choices=genChoices(q.answer,state.currentLevel);
+  var gr=document.getElementById('choices-grid');
+  gr.innerHTML='';
+  choices.forEach(function(val){
+    var btn=document.createElement('button');
+    btn.className='choice-btn';btn.textContent=val;
+    btn.addEventListener('click',(function(b,v,a){return function(){handleChoice(b,v,a);};})(btn,val,q.answer));
+    gr.appendChild(btn);
   });
-  state.answering = false;
+  state.answering=false;
 }
 
-function generateChoices(correct, level) {
-  var choices = {};
-  choices[correct] = true;
-  var range = level <= 2 ? 3 : level <= 5 ? 5 : level <= 7 ? 8 : 15;
-  var tries = 0;
-  while (Object.keys(choices).length < 4 && tries < 50) {
-    tries++;
-    var wrong = correct + (Math.random() < 0.5 ? 1 : -1) * rnd(1, range);
-    if (wrong > 0 && !choices[wrong]) choices[wrong] = true;
-  }
-  return Object.keys(choices).map(Number).sort(function(){ return Math.random()-0.5; });
+function genChoices(correct,level){
+  var s={};s[correct]=true;
+  var range=level<=2?3:level<=5?5:level<=7?8:15;
+  var tries=0;
+  while(Object.keys(s).length<4&&tries<60){tries++;var w=correct+(Math.random()<0.5?1:-1)*rnd(1,range);if(w>0&&!s[w])s[w]=true;}
+  return Object.keys(s).map(Number).sort(function(){return Math.random()-0.5;});
 }
 
-function handleChoice(btn, val, answer) {
-  if (state.answering) return;
-  state.answering = true;
-  var allBtns = document.querySelectorAll('.choice-btn');
-  allBtns.forEach(function(b){ b.disabled = true; });
-
-  if (val === answer) {
-    btn.classList.add('correct');
-    state.score++;
-    playTone('correct');
-    showFeedback('⭕');
-    document.getElementById('speech-bubble').textContent = CORRECT_MSGS[Math.floor(Math.random()*CORRECT_MSGS.length)];
-  } else {
+function handleChoice(btn,val,answer){
+  if(state.answering)return;state.answering=true;
+  var lv=LEVEL_CONFIG[state.currentLevel-1];
+  var ch=CHARS[lv.char];
+  var allBtns=document.querySelectorAll('.choice-btn');
+  allBtns.forEach(function(b){b.disabled=true;});
+  if(val===answer){
+    btn.classList.add('correct');state.score++;
+    playTone('correct');showFeedback('⭕');
+    document.getElementById('speech-bubble').textContent=ch.correctMsgs[Math.floor(Math.random()*ch.correctMsgs.length)];
+  }else{
     btn.classList.add('wrong');
-    allBtns.forEach(function(b){ if (parseInt(b.textContent) === answer) b.classList.add('correct'); });
-    playTone('wrong');
-    showFeedback('❌');
-    document.getElementById('speech-bubble').textContent = WRONG_MSGS[Math.floor(Math.random()*WRONG_MSGS.length)];
+    allBtns.forEach(function(b){if(parseInt(b.textContent)===answer)b.classList.add('correct');});
+    playTone('wrong');showFeedback('❌');
+    document.getElementById('speech-bubble').textContent=WRONG_MSGS[Math.floor(Math.random()*WRONG_MSGS.length)];
   }
-
-  setTimeout(function() {
-    state.qIndex++;
-    if (state.qIndex >= TOTAL_Q) showResult();
-    else renderQuestion();
-  }, 900);
+  setTimeout(function(){state.qIndex++;if(state.qIndex>=TOTAL_Q)showResult();else renderQuestion();},900);
 }
 
-function showFeedback(emoji) {
-  var el = document.getElementById('feedback');
-  el.textContent = emoji;
-  el.classList.remove('hide');
-  el.classList.add('show');
-  setTimeout(function() {
-    el.classList.remove('show');
-    el.classList.add('hide');
-    setTimeout(function(){ el.classList.remove('hide'); }, 300);
-  }, 600);
+function showFeedback(emoji){
+  var el=document.getElementById('feedback');
+  el.textContent=emoji;el.classList.remove('hide');el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');el.classList.add('hide');setTimeout(function(){el.classList.remove('hide');},300);},600);
 }
+function confirmBack(){if(confirm('やめますか？'))showScreen('levels');}
 
-function confirmBack() {
-  if (confirm('やめますか？(レベルえらびにもどります)')) showScreen('levels');
-}
-
-// ============================================================
+// ================================================================
 // RESULT
-// ============================================================
-function showResult() {
-  var score = state.score;
-  var pct = score / TOTAL_Q;
-  var stars = pct >= 0.9 ? 3 : pct >= 0.7 ? 2 : pct >= 0.5 ? 1 : 0;
+// ================================================================
+function showResult(){
+  var score=state.score;
+  var pct=score/TOTAL_Q;
+  var stars=pct>=0.9?3:pct>=0.7?2:pct>=0.5?1:0;
+  var lv=LEVEL_CONFIG[state.currentLevel-1];
+  var ch=CHARS[lv.char];
 
-  var prev = (state.progress[state.currentLevel] && state.progress[state.currentLevel].stars) || 0;
-  state.progress[state.currentLevel] = {
-    stars: Math.max(prev, stars),
-    score: Math.max((state.progress[state.currentLevel] && state.progress[state.currentLevel].score) || 0, score),
+  var prev=(state.progress[state.currentLevel]&&state.progress[state.currentLevel].stars)||0;
+  state.progress[state.currentLevel]={
+    stars:Math.max(prev,stars),
+    score:Math.max((state.progress[state.currentLevel]&&state.progress[state.currentLevel].score)||0,score),
   };
-  if (stars > 0 && state.currentLevel < 10) {
-    if (!state.progress[state.currentLevel + 1]) state.progress[state.currentLevel + 1] = {};
-  }
+  if(stars>0&&state.currentLevel<10){if(!state.progress[state.currentLevel+1])state.progress[state.currentLevel+1]={};}
   saveProgress();
 
-  var gForm = getLevelGodzillaForm(state.currentLevel);
-  var mForm = getLevelMothraForm(state.currentLevel);
+  // Set background
+  document.getElementById('result').style.background=ch.resultBg;
 
-  var resultMascotEl = document.getElementById('result-mascot');
-  resultMascotEl.style.animation = 'none';
-  resultMascotEl.offsetHeight;
-  resultMascotEl.style.animation = '';
+  // Mascot with animation
+  var mascotEl=document.getElementById('result-mascot');
+  mascotEl.className='result-mascot';
+  mascotEl.innerHTML='';
+  mascotEl.offsetHeight; // reflow
 
-  var formName;
-  if (stars === 3) {
-    resultMascotEl.innerHTML = mothraSVG(120, 104, mForm);
-    formName = MOTHRA_FORMS[mForm] + ' が祝福！';
-  } else {
-    resultMascotEl.innerHTML = godzillaSVG(104, 120, gForm);
-    formName = 'ゴジラ ' + GODZILLA_FORMS[gForm];
+  var svgSize=stars===3?130:110;
+  mascotEl.innerHTML=CHAR_SVG_FN[lv.char](svgSize,svgSize);
+  mascotEl.classList.add(stars===3?'anim-perfect':'anim-normal');
+  mascotEl.style.filter='drop-shadow(0 6px 20px '+ch.accent+'66)';
+
+  // Sparkles on perfect
+  if(stars===3){
+    setTimeout(function(){
+      var wrap=document.createElement('div');
+      wrap.className='sparkle-wrap';
+      var angles=[0,45,90,135,180,225,270,315];
+      angles.forEach(function(a,i){
+        var sp=document.createElement('span');
+        sp.className='sparkle';
+        var rad=(a*Math.PI)/180;
+        var dist=rnd(60,100);
+        sp.style.setProperty('--dx',Math.cos(rad)*dist+'px');
+        sp.style.setProperty('--dy',Math.sin(rad)*dist+'px');
+        sp.style.animationDelay=(i*0.08)+'s';
+        sp.textContent=ch.sparkles[i%ch.sparkles.length];
+        wrap.appendChild(sp);
+      });
+      mascotEl.appendChild(wrap);
+    },200);
   }
-  document.getElementById('result-form-name').textContent = formName;
 
-  var titles = stars === 3
-    ? ['かんぺき！！','パーフェクト！','すごすぎる！！'][rnd(0,2)]
-    : stars === 2 ? ['やるじゃん！','さすが！','もうすこしだ！'][rnd(0,2)]
-    : stars === 1 ? ['よくがんばった！','ファイト！','つぎはもっと！'][rnd(0,2)]
-    : 'まだまだいける！';
+  // Char name badge
+  var cnEl=document.getElementById('result-char-name');
+  cnEl.textContent=ch.name+(ch.label?' '+ch.label:'');
+  cnEl.style.background=ch.accentBg;
+  cnEl.style.color=ch.accent;
 
-  var messages = {
-    3: '🎊 ぜんもんせいかい！キミは天才だ！！',
-    2: '✨ ' + score + 'もん せいかい！もういちど！',
-    1: '💪 ' + score + 'もん せいかい！れんしゅうしよう！',
-    0: '😊 ' + score + 'もん せいかい！いっしょにれんしゅう！',
-  };
+  // Titles
+  var titles=stars===3
+    ?['かんぺき！！','パーフェクト！','すごすぎる！！'][rnd(0,2)]
+    :stars===2?['やるじゃん！','さすが！','もうすこしだ！'][rnd(0,2)]
+    :stars===1?['よくがんばった！','ファイト！','つぎはもっと！'][rnd(0,2)]
+    :'まだまだいける！';
 
-  document.getElementById('result-title').textContent = titles;
-  document.getElementById('result-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
-  document.getElementById('result-score').textContent = score + ' / ' + TOTAL_Q + 'もん せいかい！';
-  document.getElementById('result-message').textContent = messages[stars];
+  var winMsg=stars>=1?ch.winMsgs[Math.floor(Math.random()*ch.winMsgs.length)]:'😊 '+score+'もん せいかい！いっしょにれんしゅう！';
+  if(stars===3)winMsg='🎊 ぜんもんせいかい！ '+ch.name+'も喜んでる！！';
 
-  var btnNext = document.getElementById('btn-next');
-  if (state.currentLevel >= 10) {
-    btnNext.textContent = '🏆 ぜんぶクリア！';
-    btnNext.onclick = function(){ showScreen('levels'); };
-  } else {
-    btnNext.textContent = 'つぎのレベル ▶';
-    btnNext.onclick = nextLevel;
-  }
+  document.getElementById('result-title').textContent=titles;
+  document.getElementById('result-stars').textContent='⭐'.repeat(stars)+'☆'.repeat(3-stars);
+  document.getElementById('result-score').textContent=score+' / '+TOTAL_Q+'もん せいかい！';
+  document.getElementById('result-message').textContent=winMsg;
+
+  // Next button color
+  var btnNext=document.getElementById('btn-next');
+  btnNext.style.color=ch.btnColor;
+  if(state.currentLevel>=10){btnNext.textContent='🏆 ぜんぶクリア！';btnNext.onclick=function(){showScreen('levels');};}
+  else{btnNext.textContent='つぎのレベル ▶';btnNext.onclick=nextLevel;}
 
   showScreen('result');
-  if (stars >= 2) { setTimeout(function(){ playTone('win'); startConfetti(); }, 300); }
-  else if (stars >= 1) { setTimeout(function(){ playTone('correct'); }, 300); }
+  if(stars>=2){setTimeout(function(){playTone('win');startConfetti();},300);}
+  else if(stars>=1){setTimeout(function(){playTone('correct');},300);}
 }
 
-function nextLevel() {
-  if (state.currentLevel < 10) startLevel(state.currentLevel + 1);
-  else showScreen('levels');
-}
-function retryLevel() { startLevel(state.currentLevel); }
+function nextLevel(){if(state.currentLevel<10)startLevel(state.currentLevel+1);else showScreen('levels');}
+function retryLevel(){startLevel(state.currentLevel);}
 
-// ============================================================
+// ================================================================
 // INIT
-// ============================================================
-updateHomeMascot();
-
-window.addEventListener('resize', function() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-});
+// ================================================================
+updateHome();
+window.addEventListener('resize',function(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
 </script>
 </body>
 </html>
