@@ -19,15 +19,27 @@ async function overpassQuery(query) {
 }
 
 // Sample evenly-spaced points along the route for tiled queries
-function sampleRoutePoints(geometry, count = 5) {
+// Dynamically calculates count based on route extent to ensure full coverage
+function sampleRoutePoints(geometry, pad) {
   const coords = geometry.coordinates
+  // Calculate route extent in degrees
+  let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity
+  for (const [lng, lat] of coords) {
+    if (lng < minLng) minLng = lng
+    if (lng > maxLng) maxLng = lng
+    if (lat < minLat) minLat = lat
+    if (lat > maxLat) maxLat = lat
+  }
+  const extent = Math.max(maxLng - minLng, maxLat - minLat)
+  // Each tile covers 2*pad degrees, overlap by 50% for full coverage
+  const count = Math.max(3, Math.ceil(extent / pad))
+
   if (coords.length <= count) return coords
   const step = Math.max(1, Math.floor(coords.length / count))
   const points = []
   for (let i = 0; i < coords.length; i += step) {
     points.push(coords[i])
   }
-  // Always include last point
   if (points[points.length - 1] !== coords[coords.length - 1]) {
     points.push(coords[coords.length - 1])
   }
@@ -37,59 +49,62 @@ function sampleRoutePoints(geometry, count = 5) {
 // Fetch ALL data (road stations, campsites, EV chargers) in one combined query per tile
 // This minimizes Overpass requests
 export async function fetchAllAlongRoute(geometry) {
-  const points = sampleRoutePoints(geometry, 3) // max ~4 tiles
-  const pad = 0.4 // ~40km radius per tile — fewer larger tiles
+  const pad = 0.4 // ~40km radius per tile
+  const points = sampleRoutePoints(geometry, pad)
   const seen = new Set()
 
   const allRoadStations = []
   const allCampsites = []
   const allChargers = []
 
-  // Query tiles sequentially with 3s delay to respect Overpass rate limit
-  for (let i = 0; i < points.length; i++) {
-    if (i > 0) await new Promise((r) => setTimeout(r, 3000))
+  // Query tiles in pairs (2 parallel) with 2s delay between batches
+  for (let i = 0; i < points.length; i += 2) {
+    if (i > 0) await new Promise((r) => setTimeout(r, 2000))
 
-    const [lng, lat] = points[i]
-    const bb = `(${lat - pad},${lng - pad},${lat + pad},${lng + pad})`
+    const batch = points.slice(i, i + 2)
+    const results = await Promise.all(
+      batch.map(([pLng, pLat]) => {
+        const bb = `(${pLat - pad},${pLng - pad},${pLat + pad},${pLng + pad})`
+        const query = `
+          [out:json][timeout:15];
+          (
+            way["highway"="services"]${bb};
+            node["highway"="services"]${bb};
+            way["highway"="rest_area"]${bb};
+            node["highway"="rest_area"]${bb};
+            node["tourism"="camp_site"]${bb};
+            node["tourism"="caravan_site"]${bb};
+            node["amenity"="charging_station"]${bb};
+          );
+          out center body;
+        `
+        return overpassQuery(query)
+      })
+    )
 
-    const query = `
-      [out:json][timeout:15];
-      (
-        way["highway"="services"]${bb};
-        node["highway"="services"]${bb};
-        way["highway"="rest_area"]${bb};
-        node["highway"="rest_area"]${bb};
-        node["tourism"="camp_site"]${bb};
-        node["tourism"="caravan_site"]${bb};
-        node["amenity"="charging_station"]${bb};
-      );
-      out center body;
-    `
-    const elements = await overpassQuery(query)
+    for (const elements of results) {
+      for (const el of elements) {
+        if (seen.has(el.id)) continue
+        seen.add(el.id)
 
-    for (const el of elements) {
-      if (seen.has(el.id)) continue
-      seen.add(el.id)
+        const elLat = el.lat ?? el.center?.lat
+        const elLng = el.lon ?? el.center?.lon
+        if (!elLat || !elLng) continue
 
-      const lat = el.lat ?? el.center?.lat
-      const lng = el.lon ?? el.center?.lon
-      if (!lat || !lng) continue
+        const tags = el.tags || {}
 
-      const tags = el.tags || {}
-
-      if (tags.highway === 'services' || tags.highway === 'rest_area') {
-        // Filter: only keep real service areas (ways/relations = mapped as areas)
-        // or nodes with recognizable names (道の駅, SA, PA)
-        const name = tags.name || tags['name:ja'] || ''
-        const isRealStation = el.type === 'way' || el.type === 'relation'
-          || /道の駅|[SsPp][Aa]$|サービスエリア|パーキングエリア/.test(name)
-        if (isRealStation) {
-          allRoadStations.push(parseRoadStation(el, lat, lng, tags))
+        if (tags.highway === 'services' || tags.highway === 'rest_area') {
+          const name = tags.name || tags['name:ja'] || ''
+          const isRealStation = el.type === 'way' || el.type === 'relation'
+            || /道の駅|[SsPp][Aa]$|サービスエリア|パーキングエリア/.test(name)
+          if (isRealStation) {
+            allRoadStations.push(parseRoadStation(el, elLat, elLng, tags))
+          }
+        } else if (tags.tourism === 'camp_site' || tags.tourism === 'caravan_site') {
+          allCampsites.push(parseCampsite(el, elLat, elLng, tags))
+        } else if (tags.amenity === 'charging_station') {
+          allChargers.push(parseCharger(el, elLat, elLng, tags))
         }
-      } else if (tags.tourism === 'camp_site' || tags.tourism === 'caravan_site') {
-        allCampsites.push(parseCampsite(el, lat, lng, tags))
-      } else if (tags.amenity === 'charging_station') {
-        allChargers.push(parseCharger(el, lat, lng, tags))
       }
     }
   }
