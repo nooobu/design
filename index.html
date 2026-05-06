@@ -1436,19 +1436,73 @@ function AnalysisStep({ analysis, profile, runType, runData, symptoms, feeling, 
 }
 
 // ─── Plan Screen helper ─────────────────────────────────────────────────────
-function StepperInput({ label, unit, value, min, max, step = 1, onChange }) {
+function StepperInput({ label, unit, value, min, max, step = 1, onChange, compact = false }) {
+  const [editing, setEditing] = React.useState(false);
+  const [raw, setRaw] = React.useState("");
+  const inputRef = React.useRef(null);
+
+  function startEdit() {
+    setRaw(String(value));
+    setEditing(true);
+    setTimeout(() => inputRef.current?.select(), 0);
+  }
+  function commitEdit() {
+    const n = parseInt(raw, 10);
+    if (!isNaN(n)) onChange(Math.min(max, Math.max(min, n)));
+    setEditing(false);
+  }
+  function handleKey(e) {
+    if (e.key === "Enter") commitEdit();
+    if (e.key === "Escape") setEditing(false);
+  }
+
   const btn = {
     width: "30px", height: "30px", borderRadius: "8px",
     border: "1px solid rgba(148,163,184,0.15)",
     background: "rgba(15,23,42,0.5)", color: "#94a3b8",
     fontSize: "18px", cursor: "pointer", lineHeight: "28px", padding: 0, textAlign: "center",
   };
+  if (compact) return (
+    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+      <button style={btn} onClick={() => onChange(Math.max(min, value - step))}>−</button>
+      {editing ? (
+        <input ref={inputRef} type="number" value={raw}
+          onChange={e => setRaw(e.target.value)} onBlur={commitEdit} onKeyDown={handleKey}
+          style={{ width: "40px", textAlign: "center", fontSize: "15px", fontWeight: "800", color: "#f1f5f9",
+            background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.5)", borderRadius: "6px", outline: "none", padding: "2px 0" }} />
+      ) : (
+        <div onClick={startEdit} style={{ width: "40px", textAlign: "center", fontSize: "15px", fontWeight: "800", color: "#f1f5f9", cursor: "text" }}>{value}</div>
+      )}
+      <button style={btn} onClick={() => onChange(Math.min(max, value + step))}>+</button>
+      <span style={{ fontSize: "11px", color: "#475569" }}>{unit}</span>
+    </div>
+  );
   return (
     <div style={{ display: "flex", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(148,163,184,0.06)" }}>
       <div style={{ flex: 1, fontSize: "13px", color: "#94a3b8" }}>{label}</div>
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <button style={btn} onClick={() => onChange(Math.max(min, value - step))}>−</button>
-        <div style={{ width: "52px", textAlign: "center", fontSize: "17px", fontWeight: "800", color: "#f1f5f9" }}>{value}</div>
+        {editing ? (
+          <input
+            ref={inputRef}
+            type="number"
+            value={raw}
+            onChange={e => setRaw(e.target.value)}
+            onBlur={commitEdit}
+            onKeyDown={handleKey}
+            style={{
+              width: "52px", textAlign: "center", fontSize: "17px", fontWeight: "800",
+              color: "#f1f5f9", background: "rgba(99,102,241,0.15)",
+              border: "1px solid rgba(99,102,241,0.5)", borderRadius: "6px",
+              outline: "none", padding: "2px 0",
+            }}
+          />
+        ) : (
+          <div
+            onClick={startEdit}
+            style={{ width: "52px", textAlign: "center", fontSize: "17px", fontWeight: "800", color: "#f1f5f9", cursor: "text" }}
+          >{value}</div>
+        )}
         <button style={btn} onClick={() => onChange(Math.min(max, value + step))}>+</button>
         <div style={{ fontSize: "11px", color: "#475569", width: "34px" }}>{unit}</div>
       </div>
@@ -1456,62 +1510,182 @@ function StepperInput({ label, unit, value, min, max, step = 1, onChange }) {
   );
 }
 
-// ─── Plan Screen ────────────────────────────────────────────────────────────
-function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan }) {
-  const [tab, setTab] = useState("setup");
-  const [planSaved, setPlanSaved] = useState(false);
-  const [dist, setDist] = useState(Math.round(runData?.dist ?? 15));
-  const [pace, setPace] = useState(() => {
-    if (runData?.durationMins && runData?.dist > 0) {
-      return Math.max(3, Math.min(20, Math.round(runData.durationMins / runData.dist)));
+// ─── GPX Parser ──────────────────────────────────────────────────────────────
+function parseGPX(text) {
+  try {
+    const dom = new DOMParser().parseFromString(text, "application/xml");
+    if (dom.querySelector("parsererror")) return null;
+    const trkpts = [...dom.querySelectorAll("trkpt")];
+    if (trkpts.length < 2) return null;
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371, r = Math.PI / 180;
+      const dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
-    return runType === "trail" ? 10 : 7;
-  });
-  const [ascent, setAscent] = useState(Math.round((runData?.ascent ?? 0) / 50) * 50);
+    let dist = 0, ascent = 0;
+    for (let i = 1; i < trkpts.length; i++) {
+      const prev = trkpts[i - 1], cur = trkpts[i];
+      dist += haversine(
+        +prev.getAttribute("lat"), +prev.getAttribute("lon"),
+        +cur.getAttribute("lat"),  +cur.getAttribute("lon")
+      );
+      const eleP = parseFloat(prev.querySelector("ele")?.textContent ?? "0");
+      const eleC = parseFloat(cur.querySelector("ele")?.textContent ?? "0");
+      if (eleC > eleP) ascent += eleC - eleP;
+    }
+    const nameEl = dom.querySelector("metadata > name") || dom.querySelector("trk > name");
+    return {
+      dist: Math.round(dist * 10) / 10,
+      ascent: Math.round(ascent / 10) * 10,
+      name: nameEl?.textContent?.trim() || null,
+    };
+  } catch { return null; }
+}
 
-  const estimatedMins = useMemo(
-    () => Math.round(dist * pace + (ascent / 100) * 4),
-    [dist, pace, ascent]
-  );
+// ─── Plan Screen ────────────────────────────────────────────────────────────
+function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, initialPlan }) {
+  const [tab, setTab] = useState(initialPlan ? "timeline" : "setup");
+  const [planSaved, setPlanSaved] = useState(!!initialPlan);
+  const [planName, setPlanName] = useState(initialPlan?.planName ?? "マイプラン");
+  const [aidStations, setAidStations] = useState(initialPlan?.aidStations ?? []);
+  const [aidFoodInput, setAidFoodInput] = useState({});
+  const [dropBagInput, setDropBagInput] = useState({});
+  const [dropBagOpen, setDropBagOpen] = useState({});
+  const [gpxError, setGpxError] = useState(null);
+  const [distView, setDistView] = useState(false);
+  const [editStep, setEditStep] = useState(null);
+  const gpxRef = React.useRef(null);
+  const [dist, setDist] = useState(() => initialPlan ? initialPlan.dist : Math.round(runData?.dist ?? 15));
+  const [ascent, setAscent] = useState(() => initialPlan ? initialPlan.ascent : Math.round((runData?.ascent ?? 0) / 50) * 50);
+  const [goalHrs, setGoalHrs] = useState(() => {
+    if (initialPlan) return initialPlan.goalHrs ?? Math.floor((initialPlan.dist * (initialPlan.derivedPace || 10) + (initialPlan.ascent/100)*4) / 60);
+    if (runData?.durationMins && runData?.dist > 0) return Math.floor(runData.durationMins / 60);
+    const defaultPace = runType === "trail" ? 10 : 7;
+    const d = Math.round(runData?.dist ?? 15);
+    const a = Math.round((runData?.ascent ?? 0) / 50) * 50;
+    return Math.floor(Math.round(d * defaultPace + (a / 100) * 4) / 60);
+  });
+  const [goalMin, setGoalMin] = useState(() => {
+    if (initialPlan) return initialPlan.goalMin ?? Math.round((initialPlan.dist * (initialPlan.derivedPace || 10) + (initialPlan.ascent/100)*4) % 60);
+    if (runData?.durationMins && runData?.dist > 0) return Math.round(runData.durationMins % 60);
+    const defaultPace = runType === "trail" ? 10 : 7;
+    const d = Math.round(runData?.dist ?? 15);
+    const a = Math.round((runData?.ascent ?? 0) / 50) * 50;
+    return Math.round(Math.round(d * defaultPace + (a / 100) * 4) % 60);
+  });
+
+  const estimatedMins = goalHrs * 60 + goalMin;
   const hrs = estimatedMins / 60;
+  const derivedPace = dist > 0 && estimatedMins > 0
+    ? Math.round((estimatedMins - (ascent / 100) * 4) / dist * 10) / 10
+    : 0;
+  function kmToMins(km) {
+    return Math.round((estimatedMins / Math.max(dist, 1)) * km);
+  }
+  function addAid() {
+    setAidStations(prev => [...prev, { id: Date.now(), km: Math.round(dist / 2), foods: [], dropBag: [], restMins: 0 }]);
+  }
+  function addDropBagItem(id) {
+    const item = (dropBagInput[id] || "").trim();
+    if (!item) return;
+    setAidStations(prev => prev.map(a => a.id === id ? { ...a, dropBag: [...(a.dropBag||[]), item] } : a));
+    setDropBagInput(prev => ({ ...prev, [id]: "" }));
+  }
+  function removeDropBagItem(aidId, idx) {
+    setAidStations(prev => prev.map(a => a.id === aidId ? { ...a, dropBag: (a.dropBag||[]).filter((_, i) => i !== idx) } : a));
+  }
+  function handleGPX(file) {
+    if (!file) return;
+    setGpxError(null);
+    const reader = new FileReader();
+    reader.onload = e => {
+      const result = parseGPX(e.target.result);
+      if (result) {
+        setDist(result.dist);
+        setAscent(result.ascent);
+        if (result.name) setPlanName(result.name);
+        setPlanSaved(false);
+      } else {
+        setGpxError("GPXを読み取れませんでした。");
+      }
+    };
+    reader.readAsText(file, "UTF-8");
+  }
+  function removeAid(id) {
+    setAidStations(prev => prev.filter(a => a.id !== id));
+  }
+  function updateAidKm(id, km) {
+    setAidStations(prev => prev.map(a => a.id === id ? { ...a, km: Math.min(dist, Math.max(0, km)) } : a));
+  }
+  function addAidFood(id) {
+    const food = (aidFoodInput[id] || "").trim();
+    if (!food) return;
+    setAidStations(prev => prev.map(a => a.id === id ? { ...a, foods: [...a.foods, food] } : a));
+    setAidFoodInput(prev => ({ ...prev, [id]: "" }));
+  }
+  function removeAidFood(aidId, foodIdx) {
+    setAidStations(prev => prev.map(a => a.id === aidId ? { ...a, foods: a.foods.filter((_, i) => i !== foodIdx) } : a));
+  }
+  function updateAidRest(id, mins) {
+    setAidStations(prev => prev.map(a => a.id === id ? { ...a, restMins: Math.max(0, mins) } : a));
+  }
 
   const targetCarbsHr = (analysis?.carbScore ?? 70) < 65 ? 60 : 50;
   const targetWaterHr = runType === "trail" ? 500 : 400;
   const targetSodiumHr = (profile?.weight ?? 65) >= 70 ? 500 : 400;
 
-  const timeline = useMemo(() => {
-    const interval = estimatedMins <= 120 ? 20 : 30;
+  function generateTimeline(totalMins, rt) {
+    const interval = totalMins <= 120 ? 20 : 30;
     const steps = [];
-    for (let t = 0; t <= estimatedMins + interval / 2; t += interval) {
+    for (let t = 0; t <= totalMins + interval / 2; t += interval) {
       const isStart = t === 0;
-      const isFinish = t >= estimatedMins;
-      const mins = isFinish ? estimatedMins : t;
+      const isFinish = t >= totalMins;
+      const mins = isFinish ? totalMins : t;
       const items = [];
-
-      if (isStart) {
-        items.push({ id: "sports", qty: 500 });
-      } else if (isFinish) {
-        items.push({ id: "cola", qty: 150 });
-      } else {
+      if (isStart) { items.push({ id: "sports", qty: 500 }); }
+      else if (isFinish) { items.push({ id: "cola", qty: 150 }); }
+      else {
         const stepN = Math.round(t / interval);
-        if (stepN % 2 === 0) {
-          items.push({ id: "sports", qty: 300 });
-        } else {
-          items.push({ id: "gel", qty: 1 });
-          items.push({ id: "water", qty: 200 });
-        }
-        if (t >= 90 && Math.round(t % 120) < interval) {
-          items.push(runType === "trail"
-            ? { id: "onigiri", qty: 1 }
-            : { id: "salt", qty: 3 });
-        }
+        if (stepN % 2 === 0) { items.push({ id: "sports", qty: 300 }); }
+        else { items.push({ id: "gel", qty: 1 }); items.push({ id: "water", qty: 200 }); }
+        if (t >= 90 && Math.round(t % 120) < interval)
+          items.push(rt === "trail" ? { id: "onigiri", qty: 1 } : { id: "salt", qty: 3 });
       }
-
       steps.push({ mins, isStart, isFinish, items });
       if (isFinish) break;
     }
     return steps;
-  }, [estimatedMins, runType]);
+  }
+
+  const [timeline, setTimeline] = useState(() =>
+    initialPlan?.timeline ?? generateTimeline(estimatedMins, runType)
+  );
+
+  function addItemToStep(stepIdx, presetId) {
+    const p = NUTRITION_PRESETS.find(x => x.id === presetId);
+    if (!p) return;
+    setTimeline(prev => prev.map((s, i) => {
+      if (i !== stepIdx) return s;
+      if (s.items.find(x => x.id === presetId)) return s;
+      return { ...s, items: [...s.items, { id: presetId, qty: p.defaultQty }] };
+    }));
+  }
+  function removeItemFromStep(stepIdx, presetId) {
+    setTimeline(prev => prev.map((s, i) =>
+      i === stepIdx ? { ...s, items: s.items.filter(x => x.id !== presetId) } : s
+    ));
+  }
+  function updateItemQty(stepIdx, presetId, delta) {
+    setTimeline(prev => prev.map((s, i) => {
+      if (i !== stepIdx) return s;
+      const p = NUTRITION_PRESETS.find(x => x.id === presetId);
+      const step = p?.unit === "ml" ? (p.defaultQty || 100) : 1;
+      return { ...s, items: s.items.map(x =>
+        x.id === presetId ? { ...x, qty: Math.max(step, x.qty + delta * step) } : x
+      )};
+    }));
+  }
 
   const totals = useMemo(() => {
     let carbs = 0, water = 0, sodium = 0;
@@ -1520,9 +1694,7 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan })
         const p = NUTRITION_PRESETS.find(x => x.id === id);
         if (!p) return;
         const r = p.unit === "ml" ? qty / p.defaultQty : qty;
-        carbs += p.carbs * r;
-        water += p.water * r;
-        sodium += p.sodium * r;
+        carbs += p.carbs * r; water += p.water * r; sodium += p.sodium * r;
       })
     );
     return {
@@ -1567,16 +1739,51 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan })
         {/* ── 設定タブ ── */}
         {tab === "setup" && (
           <>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "12px" }}>プラン名</div>
+            <div style={{ ...card, padding: "12px 14px", marginBottom: "16px" }}>
+              <input
+                value={planName}
+                onChange={e => { setPlanName(e.target.value); setPlanSaved(false); }}
+                placeholder="例: UTMF A7 補給プラン"
+                style={{
+                  width: "100%", background: "transparent", border: "none", outline: "none",
+                  fontSize: "16px", fontWeight: "800", color: "#f1f5f9",
+                  fontFamily: "'Noto Sans JP','SF Pro Display',-apple-system,sans-serif",
+                }}
+              />
+            </div>
             <div style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "12px" }}>次回レース設定</div>
 
             <div style={card}>
               <StepperInput label="距離" unit="km" value={dist} min={1} max={200} onChange={setDist} />
-              <StepperInput label="目標ペース" unit="分/km" value={pace} min={3} max={20} onChange={setPace} />
+              <div style={{ display: "flex", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(148,163,184,0.06)" }}>
+                <div style={{ flex: 1, fontSize: "13px", color: "#94a3b8" }}>目標タイム</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <StepperInput compact label="" unit="h" value={goalHrs} min={0} max={30} onChange={setGoalHrs} />
+                  <StepperInput compact label="" unit="m" value={goalMin} min={0} max={59} step={5} onChange={setGoalMin} />
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", padding: "8px 0" }}>
+                <div style={{ flex: 1, fontSize: "12px", color: "#475569" }}>推定ペース</div>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: derivedPace > 0 ? "#a5b4fc" : "#334155" }}>
+                  {derivedPace > 0 ? `${derivedPace} 分/km` : "—"}
+                </div>
+              </div>
               <StepperInput label="獲得標高" unit="m" value={ascent} min={0} max={5000} step={50} onChange={setAscent} />
             </div>
 
+            {/* GPX読み込み */}
+            <input ref={gpxRef} type="file" accept=".gpx" style={{ display:"none" }}
+              onChange={e => { if (e.target.files[0]) { handleGPX(e.target.files[0]); e.target.value=""; } }} />
+            <button onClick={() => gpxRef.current.click()} style={{
+              width: "100%", padding: "11px", borderRadius: "12px", marginBottom: "12px",
+              border: "1px dashed rgba(99,102,241,0.35)", background: "rgba(99,102,241,0.06)",
+              color: "#818cf8", fontSize: "12px", fontWeight: "700", cursor: "pointer",
+            }}>📍 GPXファイルを読み込む</button>
+            {gpxError && <div style={{ fontSize: "11px", color: "#f87171", marginBottom: "10px", textAlign: "center" }}>{gpxError}</div>}
+
             <div style={{ ...card, textAlign: "center", padding: "24px 16px" }}>
-              <div style={{ fontSize: "10px", color: "#64748b", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "8px" }}>推定タイム</div>
+              <div style={{ fontSize: "10px", color: "#64748b", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "8px" }}>目標タイム</div>
               <div style={{ fontSize: "42px", fontWeight: "900", letterSpacing: "-2px", color: "#f8fafc" }}>{fmt(estimatedMins)}</div>
               <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px" }}>{dist} km · ↑{ascent} m</div>
             </div>
@@ -1614,7 +1821,19 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan })
         {/* ── タイムラインタブ ── */}
         {tab === "timeline" && (
           <>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "12px" }}>補給タイムライン</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+              <div style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", letterSpacing: "2px", textTransform: "uppercase" }}>補給タイムライン</div>
+              <div style={{ display: "flex", gap: "6px" }}>
+                <button onClick={() => setDistView(v => !v)} style={{
+                  background: "rgba(30,41,59,0.6)", border: "1px solid rgba(148,163,184,0.1)",
+                  color: "#94a3b8", borderRadius: "8px", padding: "4px 10px", fontSize: "11px", fontWeight: "700", cursor: "pointer",
+                }}>{distView ? "⏱ タイム" : "📍 距離"}</button>
+                <button onClick={() => setTimeline(generateTimeline(estimatedMins, runType))} style={{
+                  background: "rgba(30,41,59,0.6)", border: "1px solid rgba(148,163,184,0.1)",
+                  color: "#64748b", borderRadius: "8px", padding: "4px 10px", fontSize: "11px", fontWeight: "700", cursor: "pointer",
+                }}>↺ リセット</button>
+              </div>
+            </div>
 
             {/* 合計値 */}
             <div style={{ ...card, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", textAlign: "center", marginBottom: "16px" }}>
@@ -1635,11 +1854,224 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan })
               })}
             </div>
 
+            {/* AIDポイント */}
+            {runType === "trail" && (
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", letterSpacing: "2px", textTransform: "uppercase" }}>AIDポイント</div>
+                  <button onClick={addAid} style={{
+                    background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)",
+                    color: "#a5b4fc", borderRadius: "8px", padding: "5px 12px", fontSize: "12px", fontWeight: "700", cursor: "pointer",
+                  }}>+ 追加</button>
+                </div>
+                {aidStations.length === 0 && (
+                  <div style={{ fontSize: "11px", color: "#334155", padding: "12px 14px", borderRadius: "12px", background: "rgba(15,23,42,0.4)", border: "1px solid rgba(148,163,184,0.06)", textAlign: "center" }}>
+                    AIDポイントなし
+                  </div>
+                )}
+                {aidStations.map(aid => (
+                  <div key={aid.id} style={{ ...cardBase, padding: "12px 14px", marginBottom: "8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "13px" }}>🏁</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1 }}>
+                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>km</span>
+                        <input
+                          type="number"
+                          value={aid.km}
+                          min={1} max={dist}
+                          onChange={e => updateAidKm(aid.id, parseInt(e.target.value) || 0)}
+                          style={{
+                            width: "60px", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.3)",
+                            borderRadius: "6px", color: "#a5b4fc", fontSize: "14px", fontWeight: "800",
+                            textAlign: "center", outline: "none", padding: "3px 0",
+                            fontFamily: "'Noto Sans JP','SF Pro Display',-apple-system,sans-serif",
+                          }}
+                        />
+                        <span style={{ fontSize: "11px", color: "#475569" }}>({fmt(kmToMins(aid.km))})</span>
+                      </div>
+                      <button onClick={() => removeAid(aid.id)} style={{ background: "none", border: "none", color: "#475569", cursor: "pointer", fontSize: "18px", padding: "0 4px", lineHeight: 1 }}>×</button>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: aid.foods.length > 0 ? "8px" : "0" }}>
+                      {aid.foods.map((food, fi) => (
+                        <div key={fi} style={{
+                          display: "flex", alignItems: "center", gap: "4px",
+                          padding: "3px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                          background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", color: "#4ade80",
+                        }}>
+                          {food}
+                          <span onClick={() => removeAidFood(aid.id, fi)} style={{ cursor: "pointer", color: "#64748b", fontWeight: "900", marginLeft: "2px" }}>×</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <input
+                        value={aidFoodInput[aid.id] || ""}
+                        onChange={e => setAidFoodInput(prev => ({ ...prev, [aid.id]: e.target.value }))}
+                        onKeyDown={e => e.key === "Enter" && addAidFood(aid.id)}
+                        placeholder="AIDフード名を入力..."
+                        style={{
+                          flex: 1, background: "rgba(15,23,42,0.6)", border: "1px solid rgba(148,163,184,0.1)",
+                          borderRadius: "8px", color: "#e2e8f0", fontSize: "12px", padding: "6px 10px",
+                          outline: "none", fontFamily: "'Noto Sans JP','SF Pro Display',-apple-system,sans-serif",
+                        }}
+                      />
+                      <button onClick={() => addAidFood(aid.id)} style={{
+                        background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)",
+                        color: "#a5b4fc", borderRadius: "8px", padding: "6px 12px", fontSize: "12px", fontWeight: "700", cursor: "pointer",
+                      }}>追加</button>
+                    </div>
+
+                    {/* ドロップバッグ */}
+                    <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: "1px solid rgba(148,163,184,0.08)" }}>
+                      <button onClick={() => setDropBagOpen(prev => ({ ...prev, [aid.id]: !prev[aid.id] }))} style={{
+                        background: "none", border: "none", color: "#94a3b8", fontSize: "11px", fontWeight: "700",
+                        cursor: "pointer", padding: "0", display: "flex", alignItems: "center", gap: "5px",
+                      }}>
+                        🎒 ドロップバッグ {dropBagOpen[aid.id] ? "▲" : "▼"}
+                        {(aid.dropBag||[]).length > 0 && <span style={{ color: "#fbbf24", marginLeft: "4px" }}>{(aid.dropBag||[]).length}点</span>}
+                      </button>
+                      {dropBagOpen[aid.id] && (
+                        <div style={{ marginTop: "8px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: (aid.dropBag||[]).length > 0 ? "8px" : "0" }}>
+                            {(aid.dropBag||[]).map((item, di) => (
+                              <div key={di} style={{
+                                display: "flex", alignItems: "center", gap: "4px",
+                                padding: "3px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                                background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", color: "#fbbf24",
+                              }}>
+                                {item}
+                                <span onClick={() => removeDropBagItem(aid.id, di)} style={{ cursor: "pointer", color: "#64748b", fontWeight: "900", marginLeft: "2px" }}>×</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <input
+                              value={dropBagInput[aid.id] || ""}
+                              onChange={e => setDropBagInput(prev => ({ ...prev, [aid.id]: e.target.value }))}
+                              onKeyDown={e => e.key === "Enter" && addDropBagItem(aid.id)}
+                              placeholder="バッグの中身を入力..."
+                              style={{
+                                flex: 1, background: "rgba(15,23,42,0.6)", border: "1px solid rgba(148,163,184,0.1)",
+                                borderRadius: "8px", color: "#e2e8f0", fontSize: "12px", padding: "6px 10px",
+                                outline: "none", fontFamily: "'Noto Sans JP','SF Pro Display',-apple-system,sans-serif",
+                              }}
+                            />
+                            <button onClick={() => addDropBagItem(aid.id)} style={{
+                              background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)",
+                              color: "#fbbf24", borderRadius: "8px", padding: "6px 12px", fontSize: "12px", fontWeight: "700", cursor: "pointer",
+                            }}>追加</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* タイムライン */}
             <div style={{ position: "relative" }}>
               <div style={{ position: "absolute", left: "21px", top: "20px", bottom: "20px", width: "2px", background: "rgba(99,102,241,0.12)" }} />
-              {timeline.map((step, i) => (
-                <div key={i} style={{ display: "flex", gap: "12px", marginBottom: "10px", alignItems: "flex-start" }}>
+              {(() => {
+                const sortedAids = [...aidStations].sort((a, b) => a.km - b.km);
+
+                // Build unified sorted event list (real steps + AIDs)
+                const events = [];
+                timeline.forEach((step, idx) => {
+                  events.push({ type: "step", mins: step.mins, step, idx, key: "step_" + idx });
+                });
+                sortedAids.forEach(aid => {
+                  events.push({ type: "aid", mins: kmToMins(aid.km), aid, key: "aid_" + aid.id });
+                });
+                events.sort((a, b) => a.mins - b.mins || (a.type === "aid" ? -1 : 1));
+
+                // Fill 30-min gaps with virtual rows
+                const rows = [];
+                let lastMins = -1;
+                for (const event of events) {
+                  if (lastMins >= 0 && event.mins - lastMins > 35) {
+                    const fillStart = Math.ceil((lastMins + 1) / 30) * 30;
+                    for (let m = fillStart; m < event.mins - 10; m += 30) {
+                      rows.push({ type: "virtual", mins: m, key: "virt_" + m });
+                    }
+                  }
+                  rows.push(event);
+                  lastMins = event.mins;
+                }
+
+                const btnSm = { background: "none", border: "none", color: "#4ade80", cursor: "pointer", fontSize: "14px", padding: "0 3px", lineHeight: 1 };
+
+                return rows.map(row => {
+                  if (row.type === "virtual") {
+                    return (
+                      <div key={row.key} style={{ display: "flex", gap: "12px", marginBottom: "10px", alignItems: "flex-start" }}>
+                        <div style={{ width: "44px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", marginTop: "10px", zIndex: 1, position: "relative", background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.2)" }} />
+                          <div style={{ fontSize: "9px", color: "#334155", fontWeight: "600" }}>
+                            {distView ? `${Math.round(row.mins / Math.max(estimatedMins, 1) * dist * 10) / 10}km` : fmt(row.mins)}
+                          </div>
+                        </div>
+                        <div style={{ flex: 1, padding: "6px 12px", borderRadius: "10px", background: "rgba(15,23,42,0.2)", border: "1px solid rgba(148,163,184,0.04)" }}>
+                          <span style={{ fontSize: "10px", color: "#1e293b" }}>補給なし</span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  if (row.type === "aid") {
+                    const { aid } = row;
+                    return (
+                      <div key={row.key} style={{ display: "flex", gap: "12px", marginBottom: "10px", alignItems: "flex-start" }}>
+                        <div style={{ width: "44px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
+                          <div style={{
+                            width: "12px", height: "12px", borderRadius: "3px", marginTop: "8px", zIndex: 1, position: "relative",
+                            background: "#22c55e", border: "2px solid #4ade80", boxShadow: "0 0 8px rgba(34,197,94,0.6)",
+                          }} />
+                          <div style={{ fontSize: "9px", color: "#4ade80", fontWeight: "700" }}>
+                            {distView ? `${aid.km}km` : fmt(kmToMins(aid.km))}
+                          </div>
+                        </div>
+                        <div style={{
+                          flex: 1, padding: "8px 12px", borderRadius: "12px",
+                          background: "rgba(34,197,94,0.07)", border: "1px solid rgba(34,197,94,0.2)",
+                        }}>
+                          <div style={{ fontSize: "10px", color: "#4ade80", fontWeight: "700", marginBottom: "5px" }}>🏁 AID {aid.km}km</div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                            {aid.foods.length === 0
+                              ? <span style={{ fontSize: "11px", color: "#334155" }}>フードなし</span>
+                              : aid.foods.map((food, fi) => (
+                                  <div key={fi} style={{
+                                    padding: "3px 9px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                                    background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.2)", color: "#4ade80",
+                                  }}>{food}</div>
+                                ))
+                            }
+                          </div>
+                          {(aid.dropBag||[]).length > 0 && (
+                            <div style={{ marginTop: "6px", paddingTop: "6px", borderTop: "1px solid rgba(251,191,36,0.15)" }}>
+                              <div style={{ fontSize: "9px", color: "#92400e", fontWeight: "700", marginBottom: "4px" }}>🎒 ドロップバッグ</div>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                                {(aid.dropBag||[]).map((item, di) => (
+                                  <div key={di} style={{
+                                    padding: "3px 9px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                                    background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", color: "#fbbf24",
+                                  }}>{item}</div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <div style={{ marginTop: "8px", paddingTop: "6px", borderTop: "1px solid rgba(34,197,94,0.12)", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "10px", color: "#4ade80" }}>⏸ 休憩</span>
+                            <button style={btnSm} onClick={() => updateAidRest(aid.id, (aid.restMins||0) - 5)}>−</button>
+                            <span style={{ fontSize: "12px", fontWeight: "700", color: "#4ade80", minWidth: "30px", textAlign: "center" }}>{aid.restMins || 0}分</span>
+                            <button style={btnSm} onClick={() => updateAidRest(aid.id, (aid.restMins||0) + 5)}>+</button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  const { step } = row;
+                  return (
+                <div key={row.key} style={{ display: "flex", gap: "12px", marginBottom: "10px", alignItems: "flex-start" }}>
                   <div style={{ width: "44px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
                     <div style={{
                       width: "12px", height: "12px", borderRadius: "50%", marginTop: "8px", zIndex: 1, position: "relative",
@@ -1648,7 +2080,9 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan })
                       boxShadow: step.isStart || step.isFinish ? "0 0 8px rgba(99,102,241,0.6)" : "none",
                     }} />
                     <div style={{ fontSize: "9px", color: step.isStart || step.isFinish ? "#818cf8" : "#475569", fontWeight: "700" }}>
-                      {fmt(step.mins)}
+                      {distView
+                        ? `${Math.round(step.mins / Math.max(estimatedMins, 1) * dist * 10) / 10}km`
+                        : fmt(step.mins)}
                     </div>
                   </div>
                   <div style={{
@@ -1658,27 +2092,61 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan })
                   }}>
                     {step.isStart && <div style={{ fontSize: "10px", color: "#818cf8", fontWeight: "700", marginBottom: "5px" }}>スタート</div>}
                     {step.isFinish && <div style={{ fontSize: "10px", color: "#818cf8", fontWeight: "700", marginBottom: "5px" }}>フィニッシュ</div>}
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "6px" }}>
                       {step.items.map(({ id, qty }, j) => {
                         const p = NUTRITION_PRESETS.find(x => x.id === id);
                         if (!p) return null;
+                        const isEditing = editStep === row.idx;
                         return (
                           <div key={j} style={{
-                            padding: "3px 9px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                            display: "flex", alignItems: "center", gap: "3px",
+                            padding: "3px 6px 3px 9px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
                             background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.18)", color: "#a5b4fc",
-                            display: "flex", alignItems: "center", gap: "4px",
                           }}>
-                            {p.icon} {p.name} <span style={{ color: "#64748b" }}>{qty}{p.unit}</span>
+                            {p.icon} {p.name}
+                            {isEditing ? (
+                              <>
+                                <button onClick={() => updateItemQty(row.idx, id, -1)} style={{ background:"none",border:"none",color:"#64748b",cursor:"pointer",fontSize:"13px",padding:"0 2px",lineHeight:1 }}>−</button>
+                                <span style={{ color: "#64748b", minWidth: "30px", textAlign:"center" }}>{qty}{p.unit}</span>
+                                <button onClick={() => updateItemQty(row.idx, id, 1)} style={{ background:"none",border:"none",color:"#64748b",cursor:"pointer",fontSize:"13px",padding:"0 2px",lineHeight:1 }}>+</button>
+                                <span onClick={() => removeItemFromStep(row.idx, id)} style={{ cursor:"pointer",color:"#475569",fontWeight:"900",padding:"0 2px" }}>×</span>
+                              </>
+                            ) : (
+                              <span style={{ color: "#64748b" }}>{qty}{p.unit}</span>
+                            )}
                           </div>
                         );
                       })}
+                      <button onClick={() => setEditStep(editStep === row.idx ? null : row.idx)} style={{
+                        padding: "3px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: "700",
+                        background: editStep === row.idx ? "rgba(99,102,241,0.2)" : "rgba(30,41,59,0.5)",
+                        border: "1px dashed rgba(148,163,184,0.2)", color: "#64748b", cursor: "pointer",
+                      }}>{editStep === row.idx ? "完了" : "✏"}</button>
                     </div>
+                    {editStep === row.idx && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", paddingTop: "6px", borderTop: "1px solid rgba(148,163,184,0.07)" }}>
+                        {NUTRITION_PRESETS.map(p => {
+                          const has = step.items.find(x => x.id === p.id);
+                          return (
+                            <div key={p.id} onClick={() => has ? removeItemFromStep(row.idx, p.id) : addItemToStep(row.idx, p.id)} style={{
+                              padding: "3px 8px", borderRadius: "16px", fontSize: "10px", fontWeight: "600",
+                              cursor: "pointer", border: "1px solid",
+                              background: has ? "rgba(99,102,241,0.15)" : "rgba(15,23,42,0.5)",
+                              borderColor: has ? "rgba(99,102,241,0.4)" : "rgba(148,163,184,0.1)",
+                              color: has ? "#a5b4fc" : "#475569",
+                            }}>{p.icon} {p.name}</div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
+                  );
+                });
+              })()}
             </div>
 
-            <button onClick={() => { onSavePlan({ dist, pace, ascent, targetCarbsHr, targetWaterHr, targetSodiumHr, timeline }); setPlanSaved(true); }} style={{
+            <button onClick={() => { onSavePlan({ planName, dist, goalHrs, goalMin, derivedPace, ascent, targetCarbsHr, targetWaterHr, targetSodiumHr, timeline, aidStations }); setPlanSaved(true); }} style={{
               width: "100%", padding: "14px", borderRadius: "14px", border: "none",
               background: planSaved ? "rgba(34,197,94,0.15)" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
               border: planSaved ? "1px solid rgba(34,197,94,0.3)" : "none",
@@ -2134,7 +2602,7 @@ function ActivityCard({ activity, onEdit }) {
 }
 
 // ─── Dashboard Screen ────────────────────────────────────────────────────────
-function DashboardScreen({ profile, runType, activities, savedPlans, onAddActivity, onEditActivity, onPlan, onLogout }) {
+function DashboardScreen({ profile, runType, activities, savedPlans, onAddActivity, onEditActivity, onPlan, onViewPlan, onLogout }) {
   const [period, setPeriod] = useState("weekly");
   const fileRef = useRef(null);
 
@@ -2256,15 +2724,25 @@ function DashboardScreen({ profile, runType, activities, savedPlans, onAddActivi
               <div key={plan.id} style={{ ...cardBase, marginBottom: "10px", padding: "14px 16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "12px", fontWeight: "700", color: "#f1f5f9", marginBottom: "4px" }}>
-                      📋 {plan.dist}km · ペース {plan.pace}分/km · ↑{plan.ascent}m
+                    <div style={{ fontSize: "13px", fontWeight: "800", color: "#f1f5f9", marginBottom: "3px" }}>
+                      {plan.planName || "プラン"}
                     </div>
                     <div style={{ fontSize: "11px", color: "#64748b" }}>
-                      糖質 {plan.targetCarbsHr}g/hr · 水分 {plan.targetWaterHr}ml/hr · Na {plan.targetSodiumHr}mg/hr
+                      {plan.dist}km · {plan.goalHrs ?? "-"}h{plan.goalMin ?? "-"}m · ↑{plan.ascent}m
+                    </div>
+                    <div style={{ fontSize: "10px", color: "#475569", marginTop: "2px" }}>
+                      糖質 {plan.targetCarbsHr}g/hr · Na {plan.targetSodiumHr}mg/hr
                     </div>
                   </div>
-                  <div style={{ fontSize: "10px", color: "#334155", flexShrink: 0 }}>
-                    {new Date(plan.createdAt).toLocaleDateString("ja-JP", { month: "short", day: "numeric" })}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+                    <div style={{ fontSize: "10px", color: "#334155" }}>
+                      {new Date(plan.createdAt).toLocaleDateString("ja-JP", { month: "short", day: "numeric" })}
+                    </div>
+                    <button onClick={() => onViewPlan(plan)} style={{
+                      background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)",
+                      color: "#a5b4fc", borderRadius: "8px", padding: "4px 12px",
+                      fontSize: "11px", fontWeight: "700", cursor: "pointer",
+                    }}>開く</button>
                   </div>
                 </div>
               </div>
@@ -2288,6 +2766,7 @@ function DashboardScreen({ profile, runType, activities, savedPlans, onAddActivi
 function MainAppShell({ user, profile, runType, analysis, runData, onLogout }) {
   const [view, setView] = useState("dashboard");
   const [editingActivity, setEditingActivity] = useState(null);
+  const [viewingPlan, setViewingPlan] = useState(null);
 
   const [activities, setActivities] = useState(() => {
     const saved = db.load(user.username, "activities");
@@ -2336,14 +2815,17 @@ function MainAppShell({ user, profile, runType, analysis, runData, onLogout }) {
     <NutritionEditModal activity={editingActivity} runType={runType}
       onSave={handleSaveActivity} onClose={() => setEditingActivity(null)} />
   );
-  if (view === "plan") return (
+  if (view === "plan" || viewingPlan) return (
     <PlanScreen profile={profile} runType={runType} analysis={analysis} runData={runData}
-      onBack={() => setView("dashboard")} onSavePlan={handleSavePlan} />
+      onBack={() => { setView("dashboard"); setViewingPlan(null); }}
+      onSavePlan={handleSavePlan}
+      initialPlan={viewingPlan} />
   );
   return (
     <DashboardScreen profile={profile} runType={runType} activities={activities}
       savedPlans={savedPlans} onAddActivity={handleAddActivity}
       onEditActivity={setEditingActivity} onPlan={() => setView("plan")}
+      onViewPlan={plan => { setViewingPlan(plan); setView("plan"); }}
       onLogout={onLogout} />
   );
 }
