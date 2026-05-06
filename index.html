@@ -62,6 +62,26 @@ const PRODUCT_DATABASE = [
   { id:"db_powerbar",     type:"bar",   brand:"PowerBar",      icon:"🍫", name:"パワーバー エナジーバー",                serving:"1本 58g",  unit:"本", defaultQty:1, carbs:42, water:0,   sodium:100, k:100, mg:20, note:"長時間運動向けのバータイプ" },
 ];
 
+// ─── Food Items for Timeline (quick-add products + common foods) ─────────────
+const FOOD_ITEMS = [
+  // 水分
+  { id:"fi_w150",  icon:"💧", name:"水 150ml",           unit:"本", defaultQty:1, carbs:0,  water:150, sodium:0,   k:0,   mg:0  },
+  { id:"fi_w200",  icon:"💧", name:"水 200ml",           unit:"本", defaultQty:1, carbs:0,  water:200, sodium:0,   k:0,   mg:0  },
+  { id:"fi_w300",  icon:"💧", name:"水 300ml",           unit:"本", defaultQty:1, carbs:0,  water:300, sodium:0,   k:0,   mg:0  },
+  { id:"fi_w500",  icon:"💧", name:"水 500ml",           unit:"本", defaultQty:1, carbs:0,  water:500, sodium:0,   k:0,   mg:0  },
+  // 食品
+  { id:"fi_onigiri",icon:"🍙", name:"おにぎり",           unit:"個", defaultQty:1, carbs:40, water:0,   sodium:350, k:80,  mg:15 },
+  { id:"fi_banana", icon:"🍌", name:"バナナ",             unit:"本", defaultQty:1, carbs:27, water:0,   sodium:1,   k:420, mg:30 },
+  { id:"fi_cola",   icon:"🥤", name:"コーラ 150ml",       unit:"缶", defaultQty:1, carbs:15, water:150, sodium:10,  k:15,  mg:5  },
+  { id:"fi_manju",  icon:"🍡", name:"まんじゅう",         unit:"個", defaultQty:1, carbs:35, water:0,   sodium:50,  k:30,  mg:5  },
+  { id:"fi_anpan",  icon:"🍞", name:"あんぱん",           unit:"個", defaultQty:1, carbs:45, water:0,   sodium:200, k:90,  mg:15 },
+  { id:"fi_chips",  icon:"🥔", name:"ポテトチップス 30g", unit:"袋", defaultQty:1, carbs:15, water:0,   sodium:150, k:80,  mg:10 },
+  { id:"fi_salt",   icon:"🧂", name:"塩タブ 3粒",        unit:"回", defaultQty:1, carbs:0,  water:0,   sodium:200, k:40,  mg:10 },
+  { id:"fi_oshiruko",icon:"🍵",name:"おしるこ",           unit:"個", defaultQty:1, carbs:36, water:100, sodium:80,  k:100, mg:10 },
+  // ジェル・ドリンク（PRODUCT_DATABASEから主要品をミラー）
+  ...PRODUCT_DATABASE.map(p => ({ ...p, defaultQty: 1 })),
+];
+
 // ─── Custom Drink Ingredients ───────────────────────────────────────────────
 const DRINK_INGREDIENTS = [
   { id:"cd",   name:"クラスターデキストリン", abbr:"CD",   color:"#fbbf24", unit:"g",  carbsPerG:1.0, naPerG:0,   mgPerG:0, note:"高分子・低浸透圧。胃もたれしにくい" },
@@ -1648,32 +1668,20 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, i
       const isStart  = t === 0;
       const isFinish = t >= totalMins;
       const mins = isFinish ? totalMins : t;
-      let items;
-      if (isStart) {
-        // スタート前: 多めの水分・Na補給、軽め糖質
-        items = [ ni("water", 500), ni("sodium", 400), ni("carbs", 20) ];
-      } else if (isFinish) {
-        // フィニッシュ: リカバリー
-        items = [ ni("water", 300), ni("carbs", 40), ni("sodium", 300) ];
-      } else {
-        // 通常ステップ: 30分ごとの推奨摂取量（科学的根拠ベース）
-        // 糖質 60g/hr → 30g/30min  水分 500ml/hr → 250ml/30min
-        // Na  600mg/hr→300mg/30min  Mg 100mg/hr→50mg/30min  K 200mg/hr→100mg/30min
-        items = [
-          ni("carbs",     30),
-          ni("water",    250),
-          ni("sodium",   300),
-          ni("magnesium", 50),
-          ni("potassium",100),
-        ];
-        // カフェイン: 2h経過後から2hごと（覚醒・パフォーマンス向上）
-        if (t >= 120 && t % 120 < interval) items.push(ni("caffeine", 100));
-        // BCAA: trail 90分ごと（筋分解抑制）
-        if (rt === "trail" && t >= 90 && t % 90 < interval) items.push(ni("bcaa", 5));
-        // クエン酸: 3hごと（疲労軽減・乳酸代謝）
-        if (t >= 180 && t % 180 < interval) items.push(ni("citric", 500));
+      // 科学的根拠ベースの目標摂取量（30分あたり）
+      const targets = isStart
+        ? { carbs: 20,  water: 500, sodium: 400, mg: 0,  k: 0   }
+        : isFinish
+        ? { carbs: 40,  water: 300, sodium: 300, mg: 0,  k: 0   }
+        : { carbs: 30,  water: 250, sodium: 300, mg: 50, k: 100 };
+      // 推奨追加（カフェイン/BCAA/クエン酸）
+      const extras = [];
+      if (!isStart && !isFinish) {
+        if (t >= 120 && t % 120 < interval) extras.push({ id: "caffeine", label: "☕カフェイン", target: 100, unit: "mg" });
+        if (rt === "trail" && t >= 90 && t % 90 < interval) extras.push({ id: "bcaa", label: "💪BCAA", target: 5, unit: "g" });
+        if (t >= 180 && t % 180 < interval) extras.push({ id: "citric", label: "🍋クエン酸", target: 500, unit: "mg" });
       }
-      steps.push({ mins, isStart, isFinish, items });
+      steps.push({ mins, isStart, isFinish, targets, extras, items: [] });
       if (isFinish) break;
     }
     return steps;
@@ -1692,39 +1700,43 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, i
     }
   }, [estimatedMins, runType]);
 
-  function addItemToStep(stepIdx, presetId) {
-    const p = NUTRITION_PRESETS.find(x => x.id === presetId);
-    if (!p) return;
+  const [stepQuery, setStepQuery] = useState("");
+
+  function addProductToStep(stepIdx, food) {
     setTimeline(prev => prev.map((s, i) => {
       if (i !== stepIdx) return s;
-      if (s.items.find(x => x.id === presetId)) return s;
-      return { ...s, items: [...s.items, { id: presetId, qty: p.defaultQty }] };
+      if (s.items.find(x => x.id === food.id)) return s; // already added
+      return { ...s, items: [...s.items, {
+        id: food.id, icon: food.icon ?? "🍽", name: food.name, unit: food.unit,
+        qty: food.defaultQty ?? 1,
+        carbs: food.carbs ?? 0, water: food.water ?? 0, sodium: food.sodium ?? 0,
+        k: food.k ?? 0, mg: food.mg ?? 0,
+      }] };
     }));
   }
-  function removeItemFromStep(stepIdx, presetId) {
+  function removeItemFromStep(stepIdx, itemId) {
     setTimeline(prev => prev.map((s, i) =>
-      i === stepIdx ? { ...s, items: s.items.filter(x => x.id !== presetId) } : s
+      i === stepIdx ? { ...s, items: s.items.filter(x => x.id !== itemId) } : s
     ));
   }
-  function updateItemQty(stepIdx, presetId, delta) {
+  function updateItemQty(stepIdx, itemId, delta) {
     setTimeline(prev => prev.map((s, i) => {
       if (i !== stepIdx) return s;
-      const p = NUTRITION_PRESETS.find(x => x.id === presetId);
-      const step = p?.unit === "ml" ? (p.defaultQty || 100) : 1;
-      return { ...s, items: s.items.map(x =>
-        x.id === presetId ? { ...x, qty: Math.max(step, x.qty + delta * step) } : x
-      )};
+      return { ...s, items: s.items.map(x => {
+        if (x.id !== itemId) return x;
+        const step = x.unit === "ml" || x.unit === "本" ? 50 : 1;
+        return { ...x, qty: Math.max(step, x.qty + delta * step) };
+      })};
     }));
   }
 
   const totals = useMemo(() => {
     let carbs = 0, water = 0, sodium = 0;
     timeline.forEach(step =>
-      step.items.forEach(({ id, qty }) => {
-        const p = NUTRITION_PRESETS.find(x => x.id === id);
-        if (!p) return;
-        const r = p.unit === "ml" ? qty / p.defaultQty : qty;
-        carbs += p.carbs * r; water += p.water * r; sodium += p.sodium * r;
+      step.items.forEach(item => {
+        carbs  += (item.carbs  ?? 0) * item.qty;
+        water  += (item.water  ?? 0) * item.qty;
+        sodium += (item.sodium ?? 0) * item.qty;
       })
     );
     return {
@@ -2100,6 +2112,31 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, i
                     );
                   }
                   const { step } = row;
+                  const isEditing = editStep === row.idx;
+                  // Compute actual nutrients from products
+                  const actual = step.items.reduce((a, it) => ({
+                    carbs: a.carbs + (it.carbs ?? 0) * it.qty,
+                    water: a.water + (it.water ?? 0) * it.qty,
+                    sodium: a.sodium + (it.sodium ?? 0) * it.qty,
+                    mg: a.mg + (it.mg ?? 0) * it.qty,
+                    k: a.k + (it.k ?? 0) * it.qty,
+                  }), { carbs: 0, water: 0, sodium: 0, mg: 0, k: 0 });
+                  const tgt = step.targets ?? { carbs: 30, water: 250, sodium: 300, mg: 50, k: 100 };
+                  const nutrients = [
+                    { id: "carbs",  icon: "⚡", name: "糖質", unit: "g",  color: "#f59e0b" },
+                    { id: "water",  icon: "💧", name: "水分", unit: "ml", color: "#3b82f6" },
+                    { id: "sodium", icon: "🧂", name: "Na",   unit: "mg", color: "#a78bfa" },
+                    { id: "mg",     icon: "🟢", name: "Mg",   unit: "mg", color: "#10b981" },
+                    { id: "k",      icon: "🍌", name: "K",    unit: "mg", color: "#f97316" },
+                  ].filter(n => (tgt[n.id] ?? 0) > 0);
+
+                  const filteredFoods = FOOD_ITEMS.filter(f => {
+                    if (step.items.find(x => x.id === f.id)) return false;
+                    if (!stepQuery) return true;
+                    const q = stepQuery.toLowerCase();
+                    return f.name.toLowerCase().includes(q) || (f.brand || "").toLowerCase().includes(q);
+                  });
+
                   return (
                 <div key={row.key} style={{ display: "flex", gap: "12px", marginBottom: "10px", alignItems: "flex-start" }}>
                   <div style={{ width: "44px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
@@ -2120,70 +2157,98 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, i
                     background: step.isStart || step.isFinish ? "rgba(99,102,241,0.1)" : "rgba(30,41,59,0.4)",
                     border: `1px solid ${step.isStart || step.isFinish ? "rgba(99,102,241,0.2)" : "rgba(148,163,184,0.07)"}`,
                   }}>
-                    {step.isStart && <div style={{ fontSize: "10px", color: "#818cf8", fontWeight: "700", marginBottom: "5px" }}>スタート</div>}
-                    {step.isFinish && <div style={{ fontSize: "10px", color: "#818cf8", fontWeight: "700", marginBottom: "5px" }}>フィニッシュ</div>}
+                    {step.isStart && <div style={{ fontSize: "10px", color: "#818cf8", fontWeight: "700", marginBottom: "6px" }}>スタート</div>}
+                    {step.isFinish && <div style={{ fontSize: "10px", color: "#818cf8", fontWeight: "700", marginBottom: "6px" }}>フィニッシュ</div>}
+
+                    {/* 入力済み商品 */}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "6px" }}>
-                      {step.items.map(({ id, qty }, j) => {
-                        const p = NUTRITION_PRESETS.find(x => x.id === id);
-                        if (!p) return null;
-                        const isEditing = editStep === row.idx;
-                        return (
-                          <div key={j} style={{
-                            display: "flex", alignItems: "center", gap: "3px",
-                            padding: "3px 6px 3px 9px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
-                            background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.18)", color: "#a5b4fc",
-                          }}>
-                            {p.icon} {p.name}
-                            {isEditing ? (
-                              <>
-                                <button onClick={() => updateItemQty(row.idx, id, -1)} style={{ background:"none",border:"none",color:"#64748b",cursor:"pointer",fontSize:"13px",padding:"0 2px",lineHeight:1 }}>−</button>
-                                <span style={{ color: "#64748b", minWidth: "30px", textAlign:"center" }}>{qty}{p.unit}</span>
-                                <button onClick={() => updateItemQty(row.idx, id, 1)} style={{ background:"none",border:"none",color:"#64748b",cursor:"pointer",fontSize:"13px",padding:"0 2px",lineHeight:1 }}>+</button>
-                                <span onClick={() => removeItemFromStep(row.idx, id)} style={{ cursor:"pointer",color:"#475569",fontWeight:"900",padding:"0 2px" }}>×</span>
-                              </>
-                            ) : (
-                              <span style={{ color: "#64748b" }}>{qty}{p.unit}</span>
-                            )}
-                          </div>
-                        );
-                      })}
-                      <button onClick={() => setEditStep(editStep === row.idx ? null : row.idx)} style={{
-                        padding: "3px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: "700",
-                        background: editStep === row.idx ? "rgba(99,102,241,0.2)" : "rgba(30,41,59,0.5)",
-                        border: "1px dashed rgba(148,163,184,0.2)", color: "#64748b", cursor: "pointer",
-                      }}>{editStep === row.idx ? "完了" : "✏"}</button>
-                    </div>
-                    {editStep === row.idx && (
-                      <div style={{ paddingTop: "8px", borderTop: "1px solid rgba(148,163,184,0.07)" }}>
-                        <div style={{ fontSize: "9px", color: "#475569", fontWeight: "700", marginBottom: "5px", letterSpacing: "0.05em" }}>必須</div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "8px" }}>
-                          {NUTRITION_PRESETS.filter(p => p.required).map(p => {
-                            const has = step.items.find(x => x.id === p.id);
-                            return (
-                              <div key={p.id} onClick={() => has ? removeItemFromStep(row.idx, p.id) : addItemToStep(row.idx, p.id)} style={{
-                                padding: "3px 8px", borderRadius: "16px", fontSize: "10px", fontWeight: "600",
-                                cursor: "pointer", border: "1px solid",
-                                background: has ? "rgba(99,102,241,0.15)" : "rgba(15,23,42,0.5)",
-                                borderColor: has ? "rgba(99,102,241,0.4)" : "rgba(148,163,184,0.1)",
-                                color: has ? "#a5b4fc" : "#475569",
-                              }}>{p.icon} {p.name}</div>
-                            );
-                          })}
+                      {step.items.length === 0 && !isEditing && (
+                        <span style={{ fontSize: "11px", color: "#334155" }}>未入力</span>
+                      )}
+                      {step.items.map((item, j) => (
+                        <div key={j} style={{
+                          display: "flex", alignItems: "center", gap: "3px",
+                          padding: "3px 6px 3px 9px", borderRadius: "20px", fontSize: "11px", fontWeight: "600",
+                          background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.18)", color: "#a5b4fc",
+                        }}>
+                          {item.icon} {item.name}
+                          {isEditing ? (
+                            <>
+                              <button onClick={() => updateItemQty(row.idx, item.id, -1)} style={{ background:"none",border:"none",color:"#64748b",cursor:"pointer",fontSize:"13px",padding:"0 2px",lineHeight:1 }}>−</button>
+                              <span style={{ color:"#64748b", minWidth:"28px", textAlign:"center", fontSize:"10px" }}>{item.qty}{item.unit}</span>
+                              <button onClick={() => updateItemQty(row.idx, item.id, 1)} style={{ background:"none",border:"none",color:"#64748b",cursor:"pointer",fontSize:"13px",padding:"0 2px",lineHeight:1 }}>+</button>
+                              <span onClick={() => removeItemFromStep(row.idx, item.id)} style={{ cursor:"pointer",color:"#475569",fontWeight:"900",padding:"0 2px",fontSize:"12px" }}>×</span>
+                            </>
+                          ) : (
+                            <span style={{ color:"#64748b", fontSize:"10px" }}>{item.qty}{item.unit}</span>
+                          )}
                         </div>
-                        <div style={{ fontSize: "9px", color: "#475569", fontWeight: "700", marginBottom: "5px", letterSpacing: "0.05em" }}>推奨</div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {NUTRITION_PRESETS.filter(p => !p.required).map(p => {
-                            const has = step.items.find(x => x.id === p.id);
-                            return (
-                              <div key={p.id} onClick={() => has ? removeItemFromStep(row.idx, p.id) : addItemToStep(row.idx, p.id)} style={{
-                                padding: "3px 8px", borderRadius: "16px", fontSize: "10px", fontWeight: "600",
-                                cursor: "pointer", border: "1px solid",
-                                background: has ? "rgba(251,191,36,0.12)" : "rgba(15,23,42,0.5)",
-                                borderColor: has ? "rgba(251,191,36,0.3)" : "rgba(148,163,184,0.1)",
-                                color: has ? "#fbbf24" : "#475569",
-                              }}>{p.icon} {p.name}</div>
-                            );
-                          })}
+                      ))}
+                      <button onClick={() => { setEditStep(isEditing ? null : row.idx); setStepQuery(""); }} style={{
+                        padding: "3px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: "700",
+                        background: isEditing ? "rgba(99,102,241,0.2)" : "rgba(30,41,59,0.5)",
+                        border: "1px dashed rgba(148,163,184,0.2)", color: "#64748b", cursor: "pointer",
+                      }}>{isEditing ? "完了" : "＋追加"}</button>
+                    </div>
+
+                    {/* 栄養素プログレスバー */}
+                    {nutrients.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: isEditing ? "8px" : "0" }}>
+                        {nutrients.map(n => {
+                          const act = actual[n.id] ?? 0;
+                          const t2  = tgt[n.id] ?? 0;
+                          const pct = t2 > 0 ? Math.min(1, act / t2) : 0;
+                          const ok  = pct >= 0.9;
+                          const bar = ok ? "#22c55e" : pct >= 0.5 ? "#fbbf24" : "#ef4444";
+                          return (
+                            <div key={n.id}>
+                              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "9px", marginBottom: "2px", color: "#64748b" }}>
+                                <span>{n.icon} {n.name}</span>
+                                <span style={{ color: ok ? "#22c55e" : "#94a3b8" }}>
+                                  {Math.round(act)}<span style={{ color:"#334155" }}>/{t2}{n.unit}</span>
+                                  {ok && " ✓"}
+                                </span>
+                              </div>
+                              <div style={{ height: "3px", borderRadius: "2px", background: "rgba(148,163,184,0.1)" }}>
+                                <div style={{ width: pct * 100 + "%", height: "100%", borderRadius: "2px", background: bar, transition: "width 0.3s" }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {/* 推奨成分ヒント */}
+                        {(step.extras ?? []).length > 0 && (
+                          <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "2px" }}>
+                            {(step.extras ?? []).map(e => (
+                              <span key={e.id} style={{ fontSize: "9px", color: "#fbbf24", background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: "10px", padding: "1px 6px" }}>
+                                {e.label} {e.target}{e.unit} 推奨
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 商品検索パネル（編集中のみ） */}
+                    {isEditing && (
+                      <div style={{ paddingTop: "8px", borderTop: "1px solid rgba(148,163,184,0.07)" }}>
+                        <input
+                          value={stepQuery}
+                          onChange={e => setStepQuery(e.target.value)}
+                          placeholder="商品・食品を検索..."
+                          style={{ width: "100%", background: "rgba(15,23,42,0.6)", border: "1px solid rgba(148,163,184,0.15)", borderRadius: "8px", padding: "6px 10px", color: "#e2e8f0", fontSize: "12px", outline: "none", boxSizing: "border-box", marginBottom: "6px" }}
+                        />
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", maxHeight: "140px", overflowY: "auto" }}>
+                          {filteredFoods.slice(0, 30).map(food => (
+                            <div key={food.id} onClick={() => addProductToStep(row.idx, food)} style={{
+                              padding: "3px 8px", borderRadius: "16px", fontSize: "10px", fontWeight: "600",
+                              cursor: "pointer", border: "1px solid rgba(148,163,184,0.12)",
+                              background: "rgba(15,23,42,0.5)", color: "#94a3b8",
+                            }}>
+                              {food.icon} {food.name}
+                              {food.serving && <span style={{ color: "#475569" }}> {food.serving}</span>}
+                            </div>
+                          ))}
+                          {filteredFoods.length === 0 && <span style={{ fontSize: "10px", color: "#334155" }}>見つかりません</span>}
                         </div>
                       </div>
                     )}
