@@ -24,20 +24,21 @@
 const { useState, useRef, useMemo } = React;
 
 // ─── Nutrition presets ─────────────────────────────────────────────────────
+// 必須 required:true / 推奨 required:false
 const NUTRITION_PRESETS = [
-  //                                                                                         ┌─ K (mg) ─┐ ┌─ Mg (mg) ─┐
-  { id: "water",   icon: "💧", name: "水",               carbs: 0,  water: 500, sodium:   0, k:   0, mg:  0, unit: "ml", defaultQty: 500 },
-  { id: "sports",  icon: "🥤", name: "電解質ドリンク",   carbs: 25, water: 500, sodium: 400, k: 120, mg: 20, unit: "ml", defaultQty: 500 },
-  { id: "gel",     icon: "⚡", name: "エナジージェル",   carbs: 25, water: 0,   sodium:  50, k:  20, mg:  5, unit: "個", defaultQty: 1   },
-  { id: "caffgel", icon: "☕", name: "カフェインジェル", carbs: 22, water: 0,   sodium:  40, k:  15, mg:  5, unit: "個", defaultQty: 1   },
-  { id: "onigiri", icon: "🍙", name: "おにぎり",         carbs: 40, water: 0,   sodium: 350, k:  80, mg: 15, unit: "個", defaultQty: 1   },
-  { id: "bar",     icon: "🍫", name: "エナジーバー",     carbs: 35, water: 0,   sodium: 100, k:  80, mg: 20, unit: "本", defaultQty: 1   },
-  { id: "salt",    icon: "🧂", name: "塩タブ",           carbs: 0,  water: 0,   sodium: 200, k:  40, mg: 10, unit: "粒", defaultQty: 3   },
-  { id: "cola",    icon: "🫙", name: "コーラ",           carbs: 15, water: 150, sodium:  10, k:  15, mg:  5, unit: "ml", defaultQty: 150 },
-  { id: "banana",  icon: "🍌", name: "バナナ",           carbs: 27, water: 0,   sodium:   1, k: 420, mg: 30, unit: "本", defaultQty: 1   },
-  { id: "manju",   icon: "🍡", name: "まんじゅう",       carbs: 35, water: 0,   sodium:  50, k:  30, mg:  5, unit: "個", defaultQty: 1   },
-  { id: "chips",   icon: "🥔", name: "ポテトチップス",   carbs: 15, water: 0,   sodium: 150, k:  80, mg: 10, unit: "g",  defaultQty: 30  },
-  { id: "anpan",   icon: "🍞", name: "あんぱん",         carbs: 45, water: 0,   sodium: 200, k:  90, mg: 15, unit: "個", defaultQty: 1   },
+  // ─── 必須栄養素 ──────────────────────────────────────────────────────────────
+  // water: 250 means "250ml water per defaultQty(250ml) serving" so r=qty/250 → total=qty ml
+  { id: "carbs",     icon: "⚡", name: "糖質",       carbs: 1,   water: 0,   sodium: 0, k: 0, mg: 0, unit: "g",  defaultQty: 30,  min: 0, max: 150,  step: 5,   required: true  },
+  { id: "water",     icon: "💧", name: "水分",       carbs: 0,   water: 250, sodium: 0, k: 0, mg: 0, unit: "ml", defaultQty: 250, min: 0, max: 1000, step: 50,  required: true  },
+  { id: "sodium",    icon: "🧂", name: "Na",         carbs: 0,   water: 0,   sodium: 1, k: 0, mg: 0, unit: "mg", defaultQty: 300, min: 0, max: 1200, step: 50,  required: true  },
+  { id: "magnesium", icon: "🟢", name: "Mg",         carbs: 0,   water: 0,   sodium: 0, k: 0, mg: 1, unit: "mg", defaultQty: 50,  min: 0, max: 300,  step: 10,  required: true  },
+  { id: "potassium", icon: "🍌", name: "K",          carbs: 0,   water: 0,   sodium: 0, k: 1, mg: 0, unit: "mg", defaultQty: 100, min: 0, max: 600,  step: 25,  required: true  },
+  // ─── 推奨栄養素 ──────────────────────────────────────────────────────────────
+  { id: "caffeine",  icon: "☕", name: "カフェイン",  carbs: 0,   water: 0,   sodium: 0, k: 0, mg: 0, unit: "mg", defaultQty: 100, min: 0, max: 400,  step: 25,  required: false },
+  { id: "citric",    icon: "🍋", name: "クエン酸",   carbs: 0,   water: 0,   sodium: 0, k: 0, mg: 0, unit: "mg", defaultQty: 500, min: 0, max: 2000, step: 100, required: false },
+  { id: "bcaa",      icon: "💪", name: "BCAA",       carbs: 0,   water: 0,   sodium: 0, k: 0, mg: 0, unit: "g",  defaultQty: 5,   min: 0, max: 20,   step: 1,   required: false },
+  { id: "vitc",      icon: "🍊", name: "ビタミンC",   carbs: 0,   water: 0,   sodium: 0, k: 0, mg: 0, unit: "mg", defaultQty: 200, min: 0, max: 1000, step: 50,  required: false },
+  { id: "arginine",  icon: "🔥", name: "アルギニン",  carbs: 0,   water: 0,   sodium: 0, k: 0, mg: 0, unit: "g",  defaultQty: 3,   min: 0, max: 15,   step: 1,   required: false },
 ];
 
 // ─── Product Database ──────────────────────────────────────────────────────
@@ -1638,19 +1639,39 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, i
   function generateTimeline(totalMins, rt) {
     const interval = totalMins <= 120 ? 20 : 30;
     const steps = [];
+    // Helper: build an item with all nutrient fields from preset
+    const ni = (id, qty) => {
+      const p = NUTRITION_PRESETS.find(x => x.id === id);
+      return { id, qty, carbs: p?.carbs ?? 0, water: p?.water ?? 0, sodium: p?.sodium ?? 0, k: p?.k ?? 0, mg: p?.mg ?? 0 };
+    };
     for (let t = 0; t <= totalMins + interval / 2; t += interval) {
-      const isStart = t === 0;
+      const isStart  = t === 0;
       const isFinish = t >= totalMins;
       const mins = isFinish ? totalMins : t;
-      const items = [];
-      if (isStart) { items.push({ id: "sports", qty: 500 }); }
-      else if (isFinish) { items.push({ id: "cola", qty: 150 }); }
-      else {
-        const stepN = Math.round(t / interval);
-        if (stepN % 2 === 0) { items.push({ id: "sports", qty: 300 }); }
-        else { items.push({ id: "gel", qty: 1 }); items.push({ id: "water", qty: 200 }); }
-        if (t >= 90 && Math.round(t % 120) < interval)
-          items.push(rt === "trail" ? { id: "onigiri", qty: 1 } : { id: "salt", qty: 3 });
+      let items;
+      if (isStart) {
+        // スタート前: 多めの水分・Na補給、軽め糖質
+        items = [ ni("water", 500), ni("sodium", 400), ni("carbs", 20) ];
+      } else if (isFinish) {
+        // フィニッシュ: リカバリー
+        items = [ ni("water", 300), ni("carbs", 40), ni("sodium", 300) ];
+      } else {
+        // 通常ステップ: 30分ごとの推奨摂取量（科学的根拠ベース）
+        // 糖質 60g/hr → 30g/30min  水分 500ml/hr → 250ml/30min
+        // Na  600mg/hr→300mg/30min  Mg 100mg/hr→50mg/30min  K 200mg/hr→100mg/30min
+        items = [
+          ni("carbs",     30),
+          ni("water",    250),
+          ni("sodium",   300),
+          ni("magnesium", 50),
+          ni("potassium",100),
+        ];
+        // カフェイン: 2h経過後から2hごと（覚醒・パフォーマンス向上）
+        if (t >= 120 && t % 120 < interval) items.push(ni("caffeine", 100));
+        // BCAA: trail 90分ごと（筋分解抑制）
+        if (rt === "trail" && t >= 90 && t % 90 < interval) items.push(ni("bcaa", 5));
+        // クエン酸: 3hごと（疲労軽減・乳酸代謝）
+        if (t >= 180 && t % 180 < interval) items.push(ni("citric", 500));
       }
       steps.push({ mins, isStart, isFinish, items });
       if (isFinish) break;
@@ -2133,19 +2154,37 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, i
                       }}>{editStep === row.idx ? "完了" : "✏"}</button>
                     </div>
                     {editStep === row.idx && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", paddingTop: "6px", borderTop: "1px solid rgba(148,163,184,0.07)" }}>
-                        {NUTRITION_PRESETS.map(p => {
-                          const has = step.items.find(x => x.id === p.id);
-                          return (
-                            <div key={p.id} onClick={() => has ? removeItemFromStep(row.idx, p.id) : addItemToStep(row.idx, p.id)} style={{
-                              padding: "3px 8px", borderRadius: "16px", fontSize: "10px", fontWeight: "600",
-                              cursor: "pointer", border: "1px solid",
-                              background: has ? "rgba(99,102,241,0.15)" : "rgba(15,23,42,0.5)",
-                              borderColor: has ? "rgba(99,102,241,0.4)" : "rgba(148,163,184,0.1)",
-                              color: has ? "#a5b4fc" : "#475569",
-                            }}>{p.icon} {p.name}</div>
-                          );
-                        })}
+                      <div style={{ paddingTop: "8px", borderTop: "1px solid rgba(148,163,184,0.07)" }}>
+                        <div style={{ fontSize: "9px", color: "#475569", fontWeight: "700", marginBottom: "5px", letterSpacing: "0.05em" }}>必須</div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "8px" }}>
+                          {NUTRITION_PRESETS.filter(p => p.required).map(p => {
+                            const has = step.items.find(x => x.id === p.id);
+                            return (
+                              <div key={p.id} onClick={() => has ? removeItemFromStep(row.idx, p.id) : addItemToStep(row.idx, p.id)} style={{
+                                padding: "3px 8px", borderRadius: "16px", fontSize: "10px", fontWeight: "600",
+                                cursor: "pointer", border: "1px solid",
+                                background: has ? "rgba(99,102,241,0.15)" : "rgba(15,23,42,0.5)",
+                                borderColor: has ? "rgba(99,102,241,0.4)" : "rgba(148,163,184,0.1)",
+                                color: has ? "#a5b4fc" : "#475569",
+                              }}>{p.icon} {p.name}</div>
+                            );
+                          })}
+                        </div>
+                        <div style={{ fontSize: "9px", color: "#475569", fontWeight: "700", marginBottom: "5px", letterSpacing: "0.05em" }}>推奨</div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                          {NUTRITION_PRESETS.filter(p => !p.required).map(p => {
+                            const has = step.items.find(x => x.id === p.id);
+                            return (
+                              <div key={p.id} onClick={() => has ? removeItemFromStep(row.idx, p.id) : addItemToStep(row.idx, p.id)} style={{
+                                padding: "3px 8px", borderRadius: "16px", fontSize: "10px", fontWeight: "600",
+                                cursor: "pointer", border: "1px solid",
+                                background: has ? "rgba(251,191,36,0.12)" : "rgba(15,23,42,0.5)",
+                                borderColor: has ? "rgba(251,191,36,0.3)" : "rgba(148,163,184,0.1)",
+                                color: has ? "#fbbf24" : "#475569",
+                              }}>{p.icon} {p.name}</div>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>
