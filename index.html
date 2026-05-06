@@ -82,6 +82,9 @@ const FOOD_ITEMS = [
   ...PRODUCT_DATABASE.map(p => ({ ...p, defaultQty: 1 })),
 ];
 
+// ─── Admin ─────────────────────────────────────────────────────────────────
+const ADMIN_PASS = "fuellab2026";
+
 // ─── Custom Drink Ingredients ───────────────────────────────────────────────
 const DRINK_INGREDIENTS = [
   { id:"cd",   name:"クラスターデキストリン", abbr:"CD",   color:"#fbbf24", unit:"g",  carbsPerG:1.0, naPerG:0,   mgPerG:0, note:"高分子・低浸透圧。胃もたれしにくい" },
@@ -736,6 +739,250 @@ const db = {
   },
 };
 
+// ─── Product Form Modal (Admin + User Custom) ───────────────────────────────
+function ProductFormModal({ initial, onSave, onClose }) {
+  const [form, setForm] = useState({
+    icon: "🍽", name: "", brand: "", unit: "袋", defaultQty: 1, serving: "",
+    carbs: 0, water: 0, sodium: 0, mg: 0, k: 0,
+    caffeine: 0, bcaa: 0, citric: 0, note: "",
+    ...initial,
+  });
+  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+
+  const numInput = (label, key) => (
+    <label style={{ fontSize: "11px", color: "#64748b", display: "flex", flexDirection: "column", gap: "4px" }}>
+      {label}
+      <input type="number" value={form[key] || 0}
+        onChange={e => set(key, parseFloat(e.target.value) || 0)}
+        style={{ ...inputStyle, textAlign: "right" }} min={0} />
+    </label>
+  );
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }}>
+      <div style={{ width: "100%", maxWidth: "480px", background: "#0f172a", borderRadius: "24px 24px 0 0", padding: "24px 20px 40px", maxHeight: "88vh", overflowY: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+          <div style={{ fontSize: "16px", fontWeight: "800", color: "#f1f5f9" }}>{initial.id ? "商品を編集" : "新しい商品を追加"}</div>
+          <button onClick={onClose} style={{ width: "28px", height: "28px", borderRadius: "50%", border: "none", background: "rgba(30,41,59,0.8)", color: "#94a3b8", cursor: "pointer", fontSize: "16px" }}>×</button>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* Icon + Name */}
+          <div style={{ display: "grid", gridTemplateColumns: "64px 1fr", gap: "10px" }}>
+            <label style={{ fontSize: "11px", color: "#64748b", display: "flex", flexDirection: "column", gap: "4px" }}>
+              アイコン
+              <input value={form.icon} onChange={e => set("icon", e.target.value)}
+                style={{ ...inputStyle, textAlign: "center", fontSize: "22px", padding: "6px" }} maxLength={4} />
+            </label>
+            <label style={{ fontSize: "11px", color: "#64748b", display: "flex", flexDirection: "column", gap: "4px" }}>
+              商品名 *
+              <input value={form.name} onChange={e => set("name", e.target.value)}
+                placeholder="おいエナ" style={inputStyle} />
+            </label>
+          </div>
+
+          {/* Brand + Serving */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <label style={{ fontSize: "11px", color: "#64748b", display: "flex", flexDirection: "column", gap: "4px" }}>
+              ブランド
+              <input value={form.brand || ""} onChange={e => set("brand", e.target.value)}
+                placeholder="Mag-on" style={inputStyle} />
+            </label>
+            <label style={{ fontSize: "11px", color: "#64748b", display: "flex", flexDirection: "column", gap: "4px" }}>
+              内容量表示
+              <input value={form.serving || ""} onChange={e => set("serving", e.target.value)}
+                placeholder="1袋 140g" style={inputStyle} />
+            </label>
+          </div>
+
+          {/* Unit + defaultQty */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <label style={{ fontSize: "11px", color: "#64748b", display: "flex", flexDirection: "column", gap: "4px" }}>
+              単位
+              <select value={form.unit} onChange={e => set("unit", e.target.value)} style={{ ...inputStyle }}>
+                {["袋", "本", "個", "缶", "回", "ml", "g"].map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </label>
+            <label style={{ fontSize: "11px", color: "#64748b", display: "flex", flexDirection: "column", gap: "4px" }}>
+              デフォルト数量
+              <input type="number" value={form.defaultQty} onChange={e => set("defaultQty", +e.target.value || 1)}
+                style={{ ...inputStyle, textAlign: "right" }} min={1} />
+            </label>
+          </div>
+
+          <div style={{ fontSize: "11px", fontWeight: "700", color: "#4ade80", paddingTop: "6px", borderTop: "1px solid rgba(148,163,184,0.08)", marginTop: "4px" }}>── 栄養成分（1単位あたり）</div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            {numInput("⚡ 糖質 (g)", "carbs")}
+            {numInput("💧 水分 (ml)", "water")}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+            {numInput("🧂 Na (mg)", "sodium")}
+            {numInput("🟢 Mg (mg)", "mg")}
+            {numInput("🍌 K (mg)", "k")}
+          </div>
+
+          <div style={{ fontSize: "11px", fontWeight: "700", color: "#94a3b8", paddingTop: "6px", borderTop: "1px solid rgba(148,163,184,0.08)", marginTop: "4px" }}>── 推奨成分（任意）</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+            {numInput("☕ カフェイン (mg)", "caffeine")}
+            {numInput("💪 BCAA (g)", "bcaa")}
+            {numInput("🍋 クエン酸 (mg)", "citric")}
+          </div>
+
+          <label style={{ fontSize: "11px", color: "#64748b", display: "flex", flexDirection: "column", gap: "4px" }}>
+            メモ・特徴
+            <input value={form.note || ""} onChange={e => set("note", e.target.value)}
+              placeholder="例：水溶性Mg配合。胃腸に優しい" style={inputStyle} />
+          </label>
+
+          <button onClick={() => {
+            if (!form.name.trim()) { alert("商品名は必須です"); return; }
+            onSave(form);
+          }} style={{
+            marginTop: "8px", width: "100%", padding: "14px", borderRadius: "12px", border: "none",
+            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+            color: "#fff", fontSize: "14px", fontWeight: "800", cursor: "pointer",
+          }}>{initial.id ? "更新する ✓" : "追加する ＋"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Admin Screen ───────────────────────────────────────────────────────────
+function AdminScreen({ onLogout }) {
+  const [products, setProducts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("fl_adminProducts") || "[]"); }
+    catch { return []; }
+  });
+  const [editing, setEditing] = useState(null);
+  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("products"); // "products" | "builtin"
+
+  function saveProducts(next) {
+    setProducts(next);
+    localStorage.setItem("fl_adminProducts", JSON.stringify(next));
+  }
+  function handleSave(product) {
+    if (product.id && products.find(p => p.id === product.id)) {
+      saveProducts(products.map(p => p.id === product.id ? product : p));
+    } else {
+      saveProducts([...products, { ...product, id: "ap_" + Date.now() }]);
+    }
+    setEditing(null);
+  }
+  function handleDelete(id) {
+    if (!confirm("この商品を削除しますか？")) return;
+    saveProducts(products.filter(p => p.id !== id));
+  }
+
+  const allDB = [...PRODUCT_DATABASE, ...products];
+  const source = activeTab === "builtin" ? PRODUCT_DATABASE : products;
+  const filtered = source.filter(p =>
+    !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.brand || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const font = "'Noto Sans JP', 'SF Pro Display', -apple-system, sans-serif";
+  const bg = "linear-gradient(165deg, #0a0e17 0%, #111827 40%, #1a1a2e 100%)";
+
+  return (
+    <div style={{ minHeight: "100vh", background: bg, color: "#e2e8f0", fontFamily: font, maxWidth: "480px", margin: "0 auto", padding: "0 0 60px" }}>
+      {/* Header */}
+      <div style={{ padding: "24px 20px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: "20px", fontWeight: "900", color: "#f1f5f9" }}>⚙️ Admin</div>
+          <div style={{ fontSize: "11px", color: "#475569" }}>商品データベース管理</div>
+        </div>
+        <button onClick={onLogout} style={{ padding: "8px 14px", borderRadius: "10px", border: "1px solid rgba(148,163,184,0.2)", background: "transparent", color: "#64748b", fontSize: "12px", cursor: "pointer", fontFamily: font }}>ログアウト</button>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", padding: "20px 20px 0" }}>
+        <div style={{ ...cardBase, textAlign: "center", padding: "14px" }}>
+          <div style={{ fontSize: "28px", fontWeight: "900", color: "#a5b4fc" }}>{PRODUCT_DATABASE.length}</div>
+          <div style={{ fontSize: "10px", color: "#64748b" }}>標準商品</div>
+        </div>
+        <div style={{ ...cardBase, textAlign: "center", padding: "14px" }}>
+          <div style={{ fontSize: "28px", fontWeight: "900", color: "#4ade80" }}>{products.length}</div>
+          <div style={{ fontSize: "10px", color: "#64748b" }}>追加済み商品</div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: "8px", margin: "16px 20px 0" }}>
+        {[["products", "追加商品"], ["builtin", "標準商品"]].map(([id, label]) => (
+          <button key={id} onClick={() => setActiveTab(id)} style={{
+            flex: 1, padding: "8px", borderRadius: "10px", border: "none", cursor: "pointer", fontFamily: font,
+            background: activeTab === id ? "rgba(99,102,241,0.2)" : "rgba(30,41,59,0.5)",
+            color: activeTab === id ? "#a5b4fc" : "#64748b",
+            fontSize: "12px", fontWeight: "700",
+            border: `1px solid ${activeTab === id ? "rgba(99,102,241,0.3)" : "rgba(148,163,184,0.08)"}`,
+          }}>{label}</button>
+        ))}
+      </div>
+
+      {/* Search + Add */}
+      <div style={{ display: "flex", gap: "8px", padding: "14px 20px 0" }}>
+        <input value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="商品名・ブランドで検索..."
+          style={{ ...inputStyle, flex: 1 }} />
+        {activeTab === "products" && (
+          <button onClick={() => setEditing({})} style={{
+            padding: "10px 14px", borderRadius: "10px", border: "none", cursor: "pointer", fontFamily: font,
+            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+            color: "#fff", fontSize: "13px", fontWeight: "700", whiteSpace: "nowrap",
+          }}>＋ 追加</button>
+        )}
+      </div>
+
+      {/* Product List */}
+      <div style={{ padding: "12px 20px 0" }}>
+        {filtered.length === 0 && (
+          <div style={{ textAlign: "center", padding: "40px 0", color: "#475569", fontSize: "13px" }}>
+            {activeTab === "products" && products.length === 0
+              ? "商品がまだありません。「＋ 追加」で登録してください。"
+              : "検索結果がありません"}
+          </div>
+        )}
+        {filtered.map(p => (
+          <div key={p.id} style={{ ...cardBase, marginBottom: "8px", display: "flex", alignItems: "flex-start", gap: "12px", padding: "12px 14px" }}>
+            <div style={{ fontSize: "24px", flexShrink: 0, marginTop: "2px" }}>{p.icon || "🍽"}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "13px", fontWeight: "700", color: "#f1f5f9" }}>{p.name}</div>
+              {p.brand && <div style={{ fontSize: "10px", color: "#4ade80", marginTop: "1px" }}>{p.brand}{p.serving ? ` · ${p.serving}` : ""}</div>}
+              <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {p.carbs > 0 && <span>⚡{p.carbs}g</span>}
+                {p.water > 0 && <span>💧{p.water}ml</span>}
+                {p.sodium > 0 && <span>🧂{p.sodium}mg</span>}
+                {p.mg > 0 && <span>🟢{p.mg}mg</span>}
+                {p.k > 0 && <span>🍌{p.k}mg</span>}
+                {p.caffeine > 0 && <span>☕{p.caffeine}mg</span>}
+              </div>
+              {p.note && <div style={{ fontSize: "10px", color: "#334155", marginTop: "3px" }}>{p.note}</div>}
+            </div>
+            {activeTab === "products" && (
+              <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                <button onClick={() => setEditing(p)} style={{
+                  padding: "4px 8px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)",
+                  background: "transparent", color: "#94a3b8", fontSize: "11px", cursor: "pointer", fontFamily: font,
+                }}>編集</button>
+                <button onClick={() => handleDelete(p.id)} style={{
+                  padding: "4px 8px", borderRadius: "6px", border: "1px solid rgba(239,68,68,0.3)",
+                  background: "transparent", color: "#f87171", fontSize: "11px", cursor: "pointer", fontFamily: font,
+                }}>削除</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {editing !== null && (
+        <ProductFormModal initial={editing} onSave={handleSave} onClose={() => setEditing(null)} />
+      )}
+    </div>
+  );
+}
+
 function AuthScreen({ onAuth }) {
   const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
@@ -759,6 +1006,12 @@ function AuthScreen({ onAuth }) {
   }
 
   function handleLogin() {
+    // Admin shortcut
+    if (username === "admin" && password === ADMIN_PASS) {
+      localStorage.setItem("fl_currentUser", "admin");
+      onAuth({ username: "admin", displayName: "Admin" });
+      return;
+    }
     const users = db.users();
     const u = users[username];
     if (!u || u.password !== password) { setError("ユーザー名またはパスワードが違います"); return; }
@@ -818,11 +1071,19 @@ function AppRoot() {
   const [user, setUser] = useState(() => {
     const u = localStorage.getItem("fl_currentUser");
     if (!u) return null;
+    if (u === "admin") return { username: "admin", displayName: "Admin" };
     const users = db.users();
     return users[u] ? { username: u, displayName: users[u].displayName } : null;
   });
+
+  function handleLogout() {
+    localStorage.removeItem("fl_currentUser");
+    setUser(null);
+  }
+
   if (!user) return <AuthScreen onAuth={setUser} />;
-  return <FuelLabOnboarding user={user} onLogout={() => { localStorage.removeItem("fl_currentUser"); setUser(null); }} />;
+  if (user.username === "admin") return <AdminScreen onLogout={handleLogout} />;
+  return <FuelLabOnboarding user={user} onLogout={handleLogout} />;
 }
 
 // ─── Main App ──────────────────────────────────────────────────────────────
@@ -1565,8 +1826,33 @@ function parseGPX(text) {
 }
 
 // ─── Plan Screen ────────────────────────────────────────────────────────────
-function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, initialPlan }) {
+function PlanScreen({ user, profile, runType, analysis, runData, onBack, onSavePlan, initialPlan }) {
   const [tab, setTab] = useState(initialPlan ? "timeline" : "setup");
+  // ─── Product DB: admin products + user custom items ─────────────────────
+  const [adminProducts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("fl_adminProducts") || "[]"); }
+    catch { return []; }
+  });
+  const [userCustomItems, setUserCustomItems] = useState(() =>
+    user ? db.load(user.username, "customItems", []) : []
+  );
+  const allFoodItems = React.useMemo(() => [
+    ...FOOD_ITEMS,
+    ...adminProducts.map(p => ({ ...p, defaultQty: p.defaultQty || 1 })),
+    ...userCustomItems,
+  ], [adminProducts, userCustomItems]);
+
+  function saveCustomItem(item) {
+    const next = [...userCustomItems, { ...item, id: "ci_" + Date.now() }];
+    setUserCustomItems(next);
+    if (user) db.save(user.username, "customItems", next);
+  }
+  function deleteCustomItem(id) {
+    const next = userCustomItems.filter(x => x.id !== id);
+    setUserCustomItems(next);
+    if (user) db.save(user.username, "customItems", next);
+  }
+  const [showCustomForm, setShowCustomForm] = useState(false);
   const [planSaved, setPlanSaved] = useState(!!initialPlan);
   const [planName, setPlanName] = useState(initialPlan?.planName ?? "マイプラン");
   const [aidStations, setAidStations] = useState(initialPlan?.aidStations ?? []);
@@ -2130,7 +2416,7 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, i
                     { id: "k",      icon: "🍌", name: "K",    unit: "mg", color: "#f97316" },
                   ].filter(n => (tgt[n.id] ?? 0) > 0);
 
-                  const filteredFoods = FOOD_ITEMS.filter(f => {
+                  const filteredFoods = allFoodItems.filter(f => {
                     if (step.items.find(x => x.id === f.id)) return false;
                     if (!stepQuery) return true;
                     const q = stepQuery.toLowerCase();
@@ -2231,25 +2517,52 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, i
                     {/* 商品検索パネル（編集中のみ） */}
                     {isEditing && (
                       <div style={{ paddingTop: "8px", borderTop: "1px solid rgba(148,163,184,0.07)" }}>
-                        <input
-                          value={stepQuery}
-                          onChange={e => setStepQuery(e.target.value)}
-                          placeholder="商品・食品を検索..."
-                          style={{ width: "100%", background: "rgba(15,23,42,0.6)", border: "1px solid rgba(148,163,184,0.15)", borderRadius: "8px", padding: "6px 10px", color: "#e2e8f0", fontSize: "12px", outline: "none", boxSizing: "border-box", marginBottom: "6px" }}
-                        />
+                        <div style={{ display: "flex", gap: "6px", marginBottom: "6px" }}>
+                          <input
+                            value={stepQuery}
+                            onChange={e => setStepQuery(e.target.value)}
+                            placeholder="商品・食品を検索..."
+                            style={{ flex: 1, background: "rgba(15,23,42,0.6)", border: "1px solid rgba(148,163,184,0.15)", borderRadius: "8px", padding: "6px 10px", color: "#e2e8f0", fontSize: "12px", outline: "none", boxSizing: "border-box" }}
+                          />
+                          <div onClick={() => setShowCustomForm(true)} style={{
+                            padding: "6px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700",
+                            cursor: "pointer", border: "1px solid rgba(99,102,241,0.35)",
+                            background: "rgba(99,102,241,0.12)", color: "#a5b4fc", whiteSpace: "nowrap",
+                          }}>＋ カスタム</div>
+                        </div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", maxHeight: "140px", overflowY: "auto" }}>
-                          {filteredFoods.slice(0, 30).map(food => (
+                          {filteredFoods.slice(0, 40).map(food => (
                             <div key={food.id} onClick={() => addProductToStep(row.idx, food)} style={{
                               padding: "3px 8px", borderRadius: "16px", fontSize: "10px", fontWeight: "600",
                               cursor: "pointer", border: "1px solid rgba(148,163,184,0.12)",
-                              background: "rgba(15,23,42,0.5)", color: "#94a3b8",
+                              background: userCustomItems.find(c => c.id === food.id)
+                                ? "rgba(99,102,241,0.15)" : "rgba(15,23,42,0.5)",
+                              color: userCustomItems.find(c => c.id === food.id) ? "#a5b4fc" : "#94a3b8",
                             }}>
                               {food.icon} {food.name}
                               {food.serving && <span style={{ color: "#475569" }}> {food.serving}</span>}
                             </div>
                           ))}
-                          {filteredFoods.length === 0 && <span style={{ fontSize: "10px", color: "#334155" }}>見つかりません</span>}
+                          {filteredFoods.length === 0 && (
+                            <div style={{ fontSize: "10px", color: "#475569", padding: "4px 0" }}>
+                              見つかりません。「＋ カスタム」で追加できます。
+                            </div>
+                          )}
                         </div>
+                        {/* User custom items management */}
+                        {userCustomItems.length > 0 && (
+                          <div style={{ marginTop: "8px", paddingTop: "6px", borderTop: "1px solid rgba(99,102,241,0.12)" }}>
+                            <div style={{ fontSize: "10px", color: "#6366f1", fontWeight: "700", marginBottom: "4px" }}>マイ商品</div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                              {userCustomItems.map(item => (
+                                <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "3px", padding: "2px 6px", borderRadius: "12px", background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.25)" }}>
+                                  <span style={{ fontSize: "10px", color: "#a5b4fc" }}>{item.icon} {item.name}</span>
+                                  <span onClick={() => deleteCustomItem(item.id)} style={{ fontSize: "10px", color: "#ef4444", cursor: "pointer", marginLeft: "2px" }}>×</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2275,6 +2588,14 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, i
           </>
         )}
       </div>
+      {/* カスタム商品追加モーダル */}
+      {showCustomForm && (
+        <ProductFormModal
+          initial={{}}
+          onSave={item => { saveCustomItem(item); setShowCustomForm(false); }}
+          onClose={() => setShowCustomForm(false)}
+        />
+      )}
     </div>
   );
 }
@@ -2929,7 +3250,7 @@ function MainAppShell({ user, profile, runType, analysis, runData, onLogout }) {
       onSave={handleSaveActivity} onClose={() => setEditingActivity(null)} />
   );
   if (view === "plan" || viewingPlan) return (
-    <PlanScreen profile={profile} runType={runType} analysis={analysis} runData={runData}
+    <PlanScreen user={user} profile={profile} runType={runType} analysis={analysis} runData={runData}
       onBack={() => { setView("dashboard"); setViewingPlan(null); }}
       onSavePlan={handleSavePlan}
       initialPlan={viewingPlan} />
