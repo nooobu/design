@@ -1662,6 +1662,15 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, i
     initialPlan?.timeline ?? generateTimeline(estimatedMins, runType)
   );
 
+  // Auto-regenerate when goal time changes significantly (e.g. user changes 2h30m→22h)
+  React.useEffect(() => {
+    if (initialPlan) return;
+    const lastStep = timeline[timeline.length - 1];
+    if (lastStep && Math.abs(lastStep.mins - estimatedMins) > 60) {
+      setTimeline(generateTimeline(estimatedMins, runType));
+    }
+  }, [estimatedMins, runType]);
+
   function addItemToStep(stepIdx, presetId) {
     const p = NUTRITION_PRESETS.find(x => x.id === presetId);
     if (!p) return;
@@ -2081,7 +2090,7 @@ function PlanScreen({ profile, runType, analysis, runData, onBack, onSavePlan, i
                     }} />
                     <div style={{ fontSize: "9px", color: step.isStart || step.isFinish ? "#818cf8" : "#475569", fontWeight: "700" }}>
                       {distView
-                        ? `${Math.round(step.mins / Math.max(estimatedMins, 1) * dist * 10) / 10}km`
+                        ? (step.isFinish ? `${dist}km` : step.isStart ? `0km` : `${Math.round(step.mins / Math.max(estimatedMins, 1) * dist * 10) / 10}km`)
                         : fmt(step.mins)}
                     </div>
                   </div>
